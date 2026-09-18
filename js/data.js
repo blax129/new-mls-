@@ -2,7 +2,10 @@
 const MW = {
   operator: {
     name: 'Matchday Workforce',
-    legal: 'Operated by Matchday Workforce LLC — an independent stadium staffing & recruitment platform. Not affiliated with Major League Soccer or any MLS club unless listed as a partner employer.',
+    legalName: 'Matchday Workforce LLC',
+    privacyEmail: 'privacy@matchdayworkforce.com',
+    legal:
+      'Operated by Matchday Workforce LLC — an independent stadium staffing & recruitment platform. Not affiliated with Major League Soccer or any MLS club unless listed as a partner employer.',
   },
 
   marketRegions: [
@@ -2005,6 +2008,76 @@ MW.getJob = (id) => MW.jobs.find((j) => j.id === id);
 MW.getFixture = (id) => (MW.fixtures || []).find((f) => f.id === id);
 MW.getMatchRole = (id) => (MW.matchRoles || []).find((r) => r.id === id);
 MW.getClubJob = (id) => (MW.clubJobs || []).find((j) => j.id === id);
+
+/** Claimed spot counts (per browser). Key → number of successful applications. */
+MW.INVENTORY_KEY = 'mw_role_inventory';
+MW.DEFAULT_CLUB_SLOTS = 5;
+MW.DEFAULT_EVENT_SLOTS = 3;
+
+MW.readInventory = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(MW.INVENTORY_KEY) || '{}');
+    return raw && typeof raw === 'object' ? raw : {};
+  } catch {
+    return {};
+  }
+};
+
+MW.writeInventory = (map) => {
+  try {
+    localStorage.setItem(MW.INVENTORY_KEY, JSON.stringify(map || {}));
+  } catch {
+    /* ignore quota / private mode */
+  }
+};
+
+MW.inventoryKey = ({ kind, matchId, roleId, clubJobId, eventJobId, jobId } = {}) => {
+  if (kind === 'match' && matchId && roleId) return `match:${matchId}:${roleId}`;
+  if (kind === 'club' && (clubJobId || jobId)) return `club:${clubJobId || jobId}`;
+  if (kind === 'event' && (eventJobId || jobId)) return `event:${eventJobId || jobId}`;
+  if (jobId) return `job:${jobId}`;
+  return '';
+};
+
+MW.baseSlotsForMatchRole = (roleId) => {
+  const role = MW.getMatchRole(roleId);
+  const n = Number(role?.slots);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+
+MW.remainingMatchRoleSlots = (matchId, roleId) => {
+  const base = MW.baseSlotsForMatchRole(roleId);
+  if (!matchId || !roleId || base <= 0) return 0;
+  const claimed = Number(MW.readInventory()[`match:${matchId}:${roleId}`]) || 0;
+  return Math.max(0, base - claimed);
+};
+
+MW.openMatchRoleCount = (matchId) =>
+  (MW.matchRoles || []).filter((role) => MW.remainingMatchRoleSlots(matchId, role.id) > 0).length;
+
+MW.remainingSlotsForOpening = (opening = {}) => {
+  const key = MW.inventoryKey(opening);
+  if (!key) return null;
+  let base = 0;
+  if (opening.kind === 'match') base = MW.baseSlotsForMatchRole(opening.roleId);
+  else if (opening.kind === 'club') base = Number(opening.baseSlots) || MW.DEFAULT_CLUB_SLOTS;
+  else if (opening.kind === 'event') base = Number(opening.baseSlots) || MW.DEFAULT_EVENT_SLOTS;
+  else return null;
+  const claimed = Number(MW.readInventory()[key]) || 0;
+  return Math.max(0, base - claimed);
+};
+
+/** Decrement remaining spots by 1 after a successful application. */
+MW.claimOpeningSlot = (opening = {}) => {
+  const key = MW.inventoryKey(opening);
+  if (!key) return null;
+  const remaining = MW.remainingSlotsForOpening(opening);
+  if (remaining == null || remaining <= 0) return 0;
+  const map = MW.readInventory();
+  map[key] = (Number(map[key]) || 0) + 1;
+  MW.writeInventory(map);
+  return remaining - 1;
+};
 
 /** Local calendar date as YYYY-MM-DD (used to auto-hide past matchdays / deadlines). */
 MW.todayISO = () => {

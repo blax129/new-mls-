@@ -1,7 +1,7 @@
 /* Matchday Workforce — shared UI helpers */
 (function () {
   const params = new URLSearchParams(window.location.search);
-  const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xnpagodq';
+  const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mdavpbew';
   const EMAILJS_SERVICE_ID = 'service_qqu6dlk';
   const EMAILJS_TEMPLATE_ID = 'template_som7doc';
   const EMAILJS_PUBLIC_KEY = 'h_8DZt_Ej5jOjpLXm';
@@ -543,6 +543,7 @@
       const s = fx.stadium;
       const md = monthDay(fx.date);
       const img = stadiumImageURL(s);
+      const openRoles = typeof MW.openMatchRoleCount === 'function' ? MW.openMatchRoleCount(fx.id) : fx.openings;
       return `
         <button type="button" class="fixture-card${img ? ' has-photo' : ''}" data-match-id="${fx.id}" style="--i:${index}">
           ${img ? `<img class="fixture-bg" src="${img}" alt="" loading="lazy" decoding="async" />` : ''}
@@ -553,62 +554,91 @@
           <div class="fixture-body">
             <p class="fixture-match">${fx.home} <span>vs</span> ${fx.away}</p>
             <p class="fixture-meta">${fx.time} · ${s.name}, ${s.city}</p>
-            <p class="fixture-openings">${fx.openings} roles hiring</p>
+            <p class="fixture-openings">${openRoles} role${openRoles === 1 ? '' : 's'} hiring</p>
           </div>
           <span class="fixture-cta btn btn-primary btn-sm">View roles</span>
         </button>
       `;
     };
 
-    const roleCardHTML = (role, fixture) => `
-      <article class="role-card">
+    const roleCardHTML = (role, fixture) => {
+      const remaining =
+        typeof MW.remainingMatchRoleSlots === 'function'
+          ? MW.remainingMatchRoleSlots(fixture.id, role.id)
+          : role.slots;
+      const filled = remaining <= 0;
+      return `
+      <article class="role-card${filled ? ' is-filled' : ''}">
         <div class="role-card-main">
           <h3>${role.title}</h3>
           <p class="role-card-meta">${role.category} · ${role.type} · ${fixture.stadium.name}</p>
-          <p class="role-card-slots">${role.slots} spots · ${role.payLabel}</p>
+          <p class="role-card-slots">${filled ? 'Filled' : `${remaining} spot${remaining === 1 ? '' : 's'} left`} · ${role.payLabel}</p>
         </div>
-        <a class="btn btn-primary btn-sm" href="job.html?match=${encodeURIComponent(fixture.id)}&role=${encodeURIComponent(role.id)}">View</a>
+        ${
+          filled
+            ? `<span class="btn btn-secondary btn-sm" aria-disabled="true">Filled</span>`
+            : `<a class="btn btn-primary btn-sm" href="job.html?match=${encodeURIComponent(fixture.id)}&role=${encodeURIComponent(role.id)}">View</a>`
+        }
       </article>
     `;
-
+    };
     const clubJobCardHTML = (job, index) => {
       const logo = MW.clubLogo(job.club);
       const mark = logo
         ? `<img class="club-job-mark club-job-logo" src="${logo}" alt="${job.club}" loading="lazy" decoding="async" />`
         : `<div class="club-job-mark" aria-hidden="true">${MW.clubInitials(job.club)}</div>`;
+      const remaining =
+        typeof MW.remainingSlotsForOpening === 'function'
+          ? MW.remainingSlotsForOpening({ kind: 'club', clubJobId: job.id })
+          : MW.DEFAULT_CLUB_SLOTS;
+      const filled = remaining <= 0;
       return `
-      <article class="club-job-card" style="--i:${index}">
+      <article class="club-job-card${filled ? ' is-filled' : ''}" style="--i:${index}">
         ${mark}
         <div class="club-job-main">
           <h3>${job.title}</h3>
           <p class="club-job-org">${job.club}</p>
           <p class="club-job-loc">${job.city} · ${job.state}</p>
-          <p class="club-job-level">${job.level || job.type}</p>
+          <p class="club-job-level">${filled ? 'Filled' : `${remaining} spot${remaining === 1 ? '' : 's'} left`} · ${job.level || job.type}</p>
         </div>
-        <a class="club-job-view" href="job.html?clubJob=${encodeURIComponent(job.id)}">
+        ${
+          filled
+            ? `<span class="club-job-view" aria-disabled="true"><span>Filled</span></span>`
+            : `<a class="club-job-view" href="job.html?clubJob=${encodeURIComponent(job.id)}">
           <span>View</span>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+        </a>`
+        }
       </article>
     `;
     };
 
-    const eventJobCardHTML = (job, index) => `
-      <article class="club-job-card" style="--i:${index}">
+    const eventJobCardHTML = (job, index) => {
+      const remaining =
+        typeof MW.remainingSlotsForOpening === 'function'
+          ? MW.remainingSlotsForOpening({ kind: 'event', eventJobId: job.id })
+          : MW.DEFAULT_EVENT_SLOTS;
+      const filled = remaining <= 0;
+      return `
+      <article class="club-job-card${filled ? ' is-filled' : ''}" style="--i:${index}">
         <div class="club-job-mark event-job-mark" aria-hidden="true">EVT</div>
         <div class="club-job-main">
           <h3>${job.title}</h3>
           <p class="club-job-org">${job.department}</p>
           <p class="club-job-loc">${job.location}</p>
-          <p class="club-job-level">${job.matchDay ? 'Match day' : 'Seasonal'} · ${job.payLabel}</p>
+          <p class="club-job-level">${filled ? 'Filled' : `${remaining} spot${remaining === 1 ? '' : 's'} left`} · ${job.matchDay ? 'Match day' : 'Seasonal'} · ${job.payLabel}</p>
         </div>
-        <a class="club-job-view" href="job.html?eventJob=${encodeURIComponent(job.id)}">
+        ${
+          filled
+            ? `<span class="club-job-view" aria-disabled="true"><span>Filled</span></span>`
+            : `<a class="club-job-view" href="job.html?eventJob=${encodeURIComponent(job.id)}">
           <span>View</span>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+        </a>`
+        }
       </article>
     `;
-
+    };
     const showMatchRoles = (matchId) => {
       const fixture = MW.enrichFixture(MW.getFixture(matchId) || {});
       if (!fixture?.id || !fixture.stadium || MW.isPastDate(fixture.date)) {
@@ -935,6 +965,37 @@
           };
         }
         const qs = `match=${encodeURIComponent(matchId)}&role=${encodeURIComponent(roleId)}`;
+        const remaining =
+          typeof MW.remainingMatchRoleSlots === 'function'
+            ? MW.remainingMatchRoleSlots(matchId, roleId)
+            : role.slots;
+        if (remaining <= 0) {
+          return {
+            kind: 'match',
+            filled: true,
+            expired: true,
+            matchId,
+            roleId,
+            title: role.title,
+            eyebrow: 'Role filled',
+            summary: `${fixture.home} vs ${fixture.away}`,
+            club: stadium.club,
+            orgLabel: 'Club',
+            location: MW.formatStadiumLocation(stadium),
+            category: role.category,
+            type: role.type,
+            pay: role.payLabel,
+            slots: '0 spots left',
+            when: `${formatDate(fixture.date)} · ${fixture.time}`,
+            applyHref: 'jobs.html',
+            detailHref: `job.html?${qs}`,
+            backHref: `jobs.html?match=${encodeURIComponent(matchId)}`,
+            description:
+              `All spots for ${role.title} on this matchday have been filled. Browse other open roles.`,
+            responsibilities: [],
+            qualifications: [],
+          };
+        }
         return {
           kind: 'match',
           matchId,
@@ -948,7 +1009,8 @@
           category: role.category,
           type: role.type,
           pay: role.payLabel,
-          slots: `${role.slots} spots open`,
+          slots: `${remaining} spot${remaining === 1 ? '' : 's'} left`,
+          remainingSlots: remaining,
           when: `${formatDate(fixture.date)} · ${fixture.time}`,
           applyHref: `apply.html?${qs}`,
           detailHref: `job.html?${qs}`,
@@ -975,6 +1037,39 @@
       const clubJob = MW.getClubJob(clubJobId);
       if (clubJob) {
         const qs = `clubJob=${encodeURIComponent(clubJobId)}`;
+        const openingBase = { kind: 'club', clubJobId };
+        const remaining =
+          typeof MW.remainingSlotsForOpening === 'function'
+            ? MW.remainingSlotsForOpening(openingBase)
+            : MW.DEFAULT_CLUB_SLOTS;
+        if (remaining <= 0) {
+          return {
+            kind: 'club',
+            filled: true,
+            expired: true,
+            clubJobId,
+            title: clubJob.title,
+            eyebrow: 'Role filled',
+            summary: clubJob.club,
+            club: clubJob.club,
+            orgLabel: 'Club',
+            location: `${clubJob.city}, ${clubJob.state}`,
+            category: clubJob.category,
+            type: clubJob.type,
+            level: clubJob.level,
+            pay: clubJob.type === 'Part-time'
+              ? 'Part-time · $26–$34 / hr'
+              : 'Full-time · $62,000–$92,000 / yr',
+            slots: '0 spots left',
+            when: 'No longer hiring',
+            applyHref: 'jobs.html?tab=club',
+            detailHref: `job.html?${qs}`,
+            backHref: 'jobs.html?tab=club',
+            description: `All spots for this club role have been filled. Browse other open roles.`,
+            responsibilities: [],
+            qualifications: [],
+          };
+        }
         return {
           kind: 'club',
           clubJobId,
@@ -990,7 +1085,8 @@
           pay: clubJob.type === 'Part-time'
             ? 'Part-time · $26–$34 / hr'
             : 'Full-time · $62,000–$92,000 / yr',
-          slots: clubJob.level || clubJob.type,
+          slots: `${remaining} spot${remaining === 1 ? '' : 's'} left`,
+          remainingSlots: remaining,
           when: 'Hiring now',
           applyHref: `apply.html?${qs}`,
           detailHref: `job.html?${qs}`,
@@ -1023,6 +1119,37 @@
           .map((p) => p.trim())
           .filter(Boolean)
           .join('</p><p>');
+        const openingBase = { kind: 'event', eventJobId };
+        const remaining =
+          typeof MW.remainingSlotsForOpening === 'function'
+            ? MW.remainingSlotsForOpening(openingBase)
+            : MW.DEFAULT_EVENT_SLOTS;
+        if (remaining <= 0) {
+          return {
+            kind: 'event',
+            filled: true,
+            expired: true,
+            eventJobId,
+            title: eventJob.title,
+            eyebrow: 'Role filled',
+            summary: eventJob.department,
+            club: 'Matchday Workforce',
+            orgLabel: 'Organization',
+            location: eventJob.location || [eventJob.city, eventJob.province].filter(Boolean).join(', '),
+            category: eventJob.department,
+            type: eventJob.type || (eventJob.matchDay ? 'Match day' : 'Seasonal'),
+            level: eventJob.workplace || '',
+            pay: eventJob.payLabel || eventJob.payDetail || 'Competitive',
+            slots: '0 spots left',
+            when: 'No longer hiring',
+            applyHref: 'jobs.html?tab=events',
+            detailHref: `job.html?${qs}`,
+            backHref: 'jobs.html?tab=events',
+            description: 'All spots for this event role have been filled. Browse other open roles.',
+            responsibilities: [],
+            qualifications: [],
+          };
+        }
         return {
           kind: 'event',
           eventJobId,
@@ -1036,7 +1163,8 @@
           type: eventJob.type || (eventJob.matchDay ? 'Match day' : 'Seasonal'),
           level: eventJob.workplace || '',
           pay: eventJob.payLabel || eventJob.payDetail || 'Competitive',
-          slots: eventJob.workplace || (eventJob.matchDay ? 'Match day' : 'Seasonal'),
+          slots: `${remaining} spot${remaining === 1 ? '' : 's'} left`,
+          remainingSlots: remaining,
           when: eventJob.matchDay ? 'Match day hiring' : 'Seasonal hiring',
           applyHref: `apply.html?${qs}`,
           detailHref: `job.html?${qs}`,
@@ -1228,9 +1356,23 @@
       root.innerHTML = `
         <div class="apply-shell apply-shell--single">
           <div class="apply-panel apply-panel--message">
-            <h1 class="apply-panel__title">Matchday closed</h1>
+            <h1 class="apply-panel__title">${opening.filled ? 'Role filled' : 'Matchday closed'}</h1>
             <p class="apply-panel__text">${opening.description}</p>
-            <a class="btn btn-primary" href="jobs.html">Browse open matchdays</a>
+            <a class="btn btn-primary" href="${opening.backHref || 'jobs.html'}">Browse open roles</a>
+          </div>
+        </div>`;
+      return;
+    }
+
+    const remainingNow =
+      typeof MW.remainingSlotsForOpening === 'function' ? MW.remainingSlotsForOpening(opening) : null;
+    if (remainingNow === 0) {
+      root.innerHTML = `
+        <div class="apply-shell apply-shell--single">
+          <div class="apply-panel apply-panel--message">
+            <h1 class="apply-panel__title">Role filled</h1>
+            <p class="apply-panel__text">All spots for this role were just taken. Browse other open roles.</p>
+            <a class="btn btn-primary" href="${opening.backHref || 'jobs.html'}">Browse open roles</a>
           </div>
         </div>`;
       return;
@@ -1344,10 +1486,10 @@
 
             <section class="apply-form__section apply-form__section--submit">
               <h2 class="apply-form__section-title"><span class="apply-form__section-number">4.</span> Submit application</h2>
-              <p class="apply-form__section-intro">If you’re happy for us to store your personal data, please confirm below. You can review our <a href="privacy.html">privacy policy</a> for more information.</p>
+              <p class="apply-form__section-intro">By submitting, you agree we may process your application details as described in our <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, including sharing them with hiring partners for this role and sending confirmation or next-step emails.</p>
               <div class="apply-form__choice">
                 <input class="apply-form__checkbox" id="apply-consent" name="consent" type="checkbox" required />
-                <label class="apply-form__checkbox-label" for="apply-consent">Allow us to process your personal information for this application.</label>
+                <label class="apply-form__checkbox-label" for="apply-consent">I agree to Matchday Workforce processing my personal information for this application, recruiting follow-up, and related hiring steps. I have read the Privacy Policy.</label>
               </div>
               <div class="apply-form__actions">
                 <button class="btn btn-primary apply-form__submit" type="submit">Submit application</button>
@@ -1454,6 +1596,11 @@
           throw new Error(message);
         }
 
+        // Reduce remaining spots after a successful application
+        if (typeof MW.claimOpeningSlot === 'function') {
+          MW.claimOpeningSlot(opening);
+        }
+
         // Branded confirmation email to the applicant (EmailJS template)
         if (window.emailjs) {
           try {
@@ -1506,7 +1653,7 @@
         let message = err?.message || 'We could not submit your application. Please try again.';
         if (/Failed to fetch|NetworkError|Load failed/i.test(message)) {
           message =
-            'Could not reach Formspree. Check your connection, and confirm this site’s domain is allowed on form xnpagodq.';
+            'Could not reach Formspree. Check your connection, and confirm this site’s domain is allowed on form mdavpbew.';
         }
         if (errorEl) {
           errorEl.hidden = false;

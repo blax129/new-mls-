@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Terms of Service — MLS Careers</title>
+  <title>Terms of Service — Matchday Workforce</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -26,15 +26,110 @@
   <header class="page-header" style="background-image:url('assets/mls/home/ball-careers.jpg')">
     <p class="section-kicker">Legal</p>
     <h1>Terms of Service</h1>
-    <p>The terms that govern use of this careers site and application process.</p>
+    <p>Rules that govern use of this careers site and the application process.</p>
   </header>
 
   <div class="container">
-    <div class="content-block">
-      <p>By using this careers site and submitting an application, you agree to use the site for lawful recruiting and employment purposes only.</p>
-      <p>Job listings, schedules, and role details may change. Submitting an application does not guarantee an interview or offer.</p>
-      <p>This page is a prototype placeholder. Replace this copy with your final Terms of Service before launch.</p>
-      <p style="margin-top:2rem"><a class="btn mls-cta-prime" href="jobs.html">Search jobs</a></p>
+    <div class="content-block legal-doc">
+      <p class="legal-meta">Effective date: August 23, 2026 · Last updated: August 23, 2026</p>
+
+      <p>
+        These Terms of Service (“Terms”) govern your access to and use of this careers website operated by
+        <strong>Matchday Workforce LLC</strong> (“Matchday Workforce,” “we,” “us,” or “our”).
+        By using the site or submitting an application, you agree to these Terms and our
+        <a href="privacy.html">Privacy Policy</a>.
+      </p>
+
+      <h2>1. Who operates this site</h2>
+      <p>
+        This site is operated by Matchday Workforce as an independent stadium staffing and recruitment platform.
+        Branding, logos, or “Careers” styling that reference Major League Soccer are for recruiting presentation only
+        unless a job listing expressly states an official MLS or club partnership.
+        Matchday Workforce is not Major League Soccer and is not affiliated with MLS or any MLS club except where
+        a listing names a partner employer.
+      </p>
+
+      <h2>2. Eligibility</h2>
+      <ul>
+        <li>You must use the site for lawful recruiting and employment-related purposes only</li>
+        <li>You must be legally authorized to work in the location required for the role, or able to obtain authorization as stated in the listing</li>
+        <li>You must meet any minimum working-age and role requirements that apply</li>
+      </ul>
+
+      <h2>3. Applications and hiring</h2>
+      <ul>
+        <li>Job listings, schedules, pay ranges, spot counts, and role details may change or be withdrawn at any time</li>
+        <li>Submitting an application does not guarantee review within a set time, an interview, an offer, or employment</li>
+        <li>Any offer is subject to the hiring partner’s requirements, verification steps, and applicable law</li>
+        <li>You agree that information you submit is accurate and not misleading</li>
+      </ul>
+
+      <h2>4. Acceptable use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Submit false, stolen, or another person’s information without authority</li>
+        <li>Scrape, overload, or disrupt the site</li>
+        <li>Attempt unauthorized access to systems, accounts, or data</li>
+        <li>Use the site to send spam or harmful content</li>
+        <li>Misrepresent an affiliation with Matchday Workforce, MLS, or any club</li>
+      </ul>
+
+      <h2>5. Intellectual property</h2>
+      <p>
+        Site design, text, and Matchday Workforce materials are owned by Matchday Workforce or its licensors.
+        Third-party marks (including club or league marks) remain the property of their owners and are used only
+        as needed for role identification or recruiting presentation.
+      </p>
+
+      <h2>6. Third-party services</h2>
+      <p>
+        Applications and confirmation messages may be processed through third-party services (including form and email providers).
+        Their availability and delivery are outside our sole control. See the Privacy Policy for how application data is handled.
+      </p>
+
+      <h2>7. Disclaimers</h2>
+      <p>
+        The site and listings are provided “as is” and “as available.” To the fullest extent permitted by law,
+        we disclaim warranties of merchantability, fitness for a particular purpose, and non-infringement.
+        We do not warrant that listings are complete, current, or error-free.
+      </p>
+
+      <h2>8. Limitation of liability</h2>
+      <p>
+        To the fullest extent permitted by law, Matchday Workforce and its officers, members, and contractors are not liable
+        for indirect, incidental, special, consequential, or punitive damages, or for lost wages, opportunities, or data,
+        arising from your use of the site or from application outcomes. Our total liability for any claim relating to the site
+        is limited to fifty U.S. dollars (US $50) or the minimum amount required by applicable law.
+      </p>
+
+      <h2>9. Indemnity</h2>
+      <p>
+        You agree to indemnify and hold harmless Matchday Workforce from claims arising out of your misuse of the site,
+        your breach of these Terms, or inaccurate information you submit, to the extent permitted by law.
+      </p>
+
+      <h2>10. Privacy</h2>
+      <p>
+        Personal information submitted through applications is handled as described in our
+        <a href="privacy.html">Privacy Policy</a>.
+      </p>
+
+      <h2>11. Changes</h2>
+      <p>
+        We may update these Terms by posting a revised version on this page. The “Last updated” date will change when we do.
+        Continued use after changes means you accept the revised Terms for later use of the site.
+      </p>
+
+      <h2>12. Contact</h2>
+      <p>
+        Questions about these Terms:
+        <a id="terms-email-link" href="mailto:privacy@matchdayworkforce.com">privacy@matchdayworkforce.com</a>
+      </p>
+
+      <p style="margin-top:2rem">
+        <a class="btn mls-cta-prime" href="jobs.html">Search jobs</a>
+        <a class="btn btn-secondary" href="privacy.html" style="margin-left:0.5rem">Privacy Policy</a>
+      </p>
     </div>
   </div>
 
@@ -60,5 +155,15 @@
 
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    (function () {
+      const email = (window.MW && MW.operator && MW.operator.privacyEmail) || 'privacy@matchdayworkforce.com';
+      const el = document.getElementById('terms-email-link');
+      if (el) {
+        el.href = 'mailto:' + email;
+        el.textContent = email;
+      }
+    })();
+  </script>
 </body>
 </html>

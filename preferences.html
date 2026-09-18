@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Manage Preferences — MLS Careers</title>
+  <title>Manage Preferences — Matchday Workforce</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -26,15 +26,54 @@
   <header class="page-header" style="background-image:url('assets/mls/home/ball-careers.jpg')">
     <p class="section-kicker">Legal</p>
     <h1>Manage Preferences</h1>
-    <p>Control cookie, communications, and privacy preferences for this careers site.</p>
+    <p>Control local site storage and how to update communication preferences.</p>
   </header>
 
   <div class="container">
-    <div class="content-block">
-      <p>Use this page to manage how we contact you and how non-essential cookies or similar technologies are used on the careers site.</p>
-      <p>In the full product, applicants would update email preferences, cookie settings, and privacy choices from here.</p>
-      <p>This page is a prototype placeholder. Replace this copy with your final preference center before launch.</p>
-      <p style="margin-top:2rem"><a class="btn mls-cta-prime" href="privacy.html">View privacy policy</a></p>
+    <div class="content-block legal-doc">
+      <p class="legal-meta">Effective date: August 23, 2026 · Last updated: August 23, 2026</p>
+
+      <p>
+        Use this page to manage non-essential local preferences for this careers site.
+        Essential application processing is described in our <a href="privacy.html">Privacy Policy</a>.
+      </p>
+
+      <form id="prefs-form" class="prefs-form" novalidate>
+        <fieldset class="prefs-fieldset">
+          <legend>Local browser storage</legend>
+          <label class="prefs-option">
+            <input type="checkbox" name="allowLocalPrefs" id="pref-local" checked />
+            <span>Allow this browser to store local preference and thank-you confirmation data for this site</span>
+          </label>
+          <label class="prefs-option">
+            <input type="checkbox" name="allowInventory" id="pref-inventory" checked />
+            <span>Allow this browser to remember remaining role-spot counts on this device</span>
+          </label>
+        </fieldset>
+
+        <fieldset class="prefs-fieldset">
+          <legend>Recruiting communications</legend>
+          <p class="prefs-note">
+            Application confirmations and hiring follow-ups are sent because you applied for a role.
+            To stop future recruiting emails, or to delete application data we hold, email
+            <a id="prefs-email-link" href="mailto:privacy@matchdayworkforce.com">privacy@matchdayworkforce.com</a>
+            from the address you used to apply.
+          </p>
+        </fieldset>
+
+        <div class="prefs-actions">
+          <button class="btn mls-cta-prime" type="submit">Save preferences</button>
+          <button class="btn btn-secondary" type="button" id="prefs-clear">Clear local site data</button>
+        </div>
+        <p class="prefs-status" id="prefs-status" hidden></p>
+      </form>
+
+      <h2>Related</h2>
+      <ul>
+        <li><a href="privacy.html">Privacy Policy</a></li>
+        <li><a href="do-not-sell.html">Do Not Sell or Share My Personal Information</a></li>
+        <li><a href="terms.html">Terms of Service</a></li>
+      </ul>
     </div>
   </div>
 
@@ -60,5 +99,72 @@
 
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    (function () {
+      const email = (window.MW && MW.operator && MW.operator.privacyEmail) || 'privacy@matchdayworkforce.com';
+      const mail = document.getElementById('prefs-email-link');
+      if (mail) {
+        mail.href = 'mailto:' + email;
+        mail.textContent = email;
+      }
+
+      const PREFS_KEY = 'mw_privacy_prefs';
+      const form = document.getElementById('prefs-form');
+      const status = document.getElementById('prefs-status');
+      const localEl = document.getElementById('pref-local');
+      const invEl = document.getElementById('pref-inventory');
+      const clearBtn = document.getElementById('prefs-clear');
+
+      const readPrefs = () => {
+        try {
+          return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+        } catch {
+          return {};
+        }
+      };
+
+      const showStatus = (msg) => {
+        if (!status) return;
+        status.hidden = false;
+        status.textContent = msg;
+      };
+
+      const prefs = readPrefs();
+      if (localEl) localEl.checked = prefs.allowLocalPrefs !== false;
+      if (invEl) invEl.checked = prefs.allowInventory !== false;
+
+      form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const next = {
+          allowLocalPrefs: Boolean(localEl?.checked),
+          allowInventory: Boolean(invEl?.checked),
+          updatedAt: new Date().toISOString(),
+        };
+        try {
+          localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+          if (!next.allowInventory) localStorage.removeItem('mw_role_inventory');
+          if (!next.allowLocalPrefs) {
+            localStorage.removeItem('mw_last_application');
+          }
+          showStatus('Preferences saved on this device.');
+        } catch {
+          showStatus('Could not save preferences in this browser.');
+        }
+      });
+
+      clearBtn?.addEventListener('click', () => {
+        try {
+          localStorage.removeItem('mw_last_application');
+          localStorage.removeItem('mw_role_inventory');
+          localStorage.removeItem(PREFS_KEY);
+          if (localEl) localEl.checked = true;
+          if (invEl) invEl.checked = true;
+          showStatus('Local site data cleared on this device.');
+        } catch {
+          showStatus('Could not clear local data in this browser.');
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

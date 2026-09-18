@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Do Not Sell or Share My Personal Information — MLS Careers</title>
+  <title>Do Not Sell or Share My Personal Information — Matchday Workforce</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -26,15 +26,53 @@
   <header class="page-header" style="background-image:url('assets/mls/home/ball-careers.jpg')">
     <p class="section-kicker">Legal</p>
     <h1>Do Not Sell or Share My Personal Information</h1>
-    <p>Request options related to the sale or sharing of personal information.</p>
+    <p>How to opt out of sale or sharing of personal information under applicable U.S. state privacy laws.</p>
   </header>
 
   <div class="container">
-    <div class="content-block">
-      <p>Depending on where you live, you may have the right to opt out of the sale or sharing of personal information.</p>
-      <p>Use this page to submit or manage that request. In the full product, this would connect to your privacy preference center.</p>
-      <p>This page is a prototype placeholder. Replace this copy with your final opt-out process before launch.</p>
-      <p style="margin-top:2rem"><a class="btn mls-cta-prime" href="preferences.html">Manage preferences</a></p>
+    <div class="content-block legal-doc">
+      <p class="legal-meta">Effective date: August 23, 2026 · Last updated: August 23, 2026</p>
+
+      <p>
+        Matchday Workforce LLC does <strong>not sell</strong> applicant personal information for money.
+        We also do not share personal information for cross-context behavioral advertising.
+      </p>
+      <p>
+        We use personal information to receive applications, contact you about roles, and work with venue or club
+        staffing partners related to openings you pursue. Details are in our <a href="privacy.html">Privacy Policy</a>.
+      </p>
+
+      <h2>Your opt-out right</h2>
+      <p>
+        If you live in a state that gives you the right to opt out of “sale” or “sharing” of personal information
+        (for example California, Colorado, Connecticut, Virginia, or similar laws), you can submit an opt-out request
+        even though we do not currently sell or share data for advertising.
+      </p>
+
+      <h2>How to submit a request</h2>
+      <ol>
+        <li>Email <a id="dns-email-link" href="mailto:privacy@matchdayworkforce.com">privacy@matchdayworkforce.com</a></li>
+        <li>Use the subject line: <strong>Do Not Sell or Share Request</strong></li>
+        <li>Include your full name, the email address you used on this site, your state of residence, and what you are requesting</li>
+      </ol>
+      <p>We will confirm and process valid requests as required by applicable law. We may need to verify your identity.</p>
+
+      <h2>Authorized agents</h2>
+      <p>
+        If an authorized agent submits a request on your behalf, we may require proof of authorization and may still
+        need to verify your identity directly.
+      </p>
+
+      <h2>Other privacy controls</h2>
+      <ul>
+        <li><a href="preferences.html">Manage Preferences</a> — communication and local storage choices</li>
+        <li><a href="privacy.html">Privacy Policy</a> — retention, deletion, and contact details</li>
+      </ul>
+
+      <p style="margin-top:2rem">
+        <a class="btn mls-cta-prime" href="preferences.html">Manage preferences</a>
+        <a class="btn btn-secondary" href="privacy.html" style="margin-left:0.5rem">Privacy Policy</a>
+      </p>
     </div>
   </div>
 
@@ -60,5 +98,15 @@
 
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    (function () {
+      const email = (window.MW && MW.operator && MW.operator.privacyEmail) || 'privacy@matchdayworkforce.com';
+      const el = document.getElementById('dns-email-link');
+      if (el) {
+        el.href = 'mailto:' + email;
+        el.textContent = email;
+      }
+    })();
+  </script>
 </body>
 </html>

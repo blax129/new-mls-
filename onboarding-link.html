@@ -95,12 +95,16 @@
       const preview = document.getElementById('fee-preview');
       const previewList = document.getElementById('fee-preview-list');
 
-      form.baseUrl.value = location.origin + location.pathname.replace(/\/[^/]*$/, '');
+      const localBase = location.origin + location.pathname.replace(/\/[^/]*$/, '');
+      form.baseUrl.value =
+        !location.origin || location.origin === 'null' || location.protocol === 'file:'
+          ? 'https://dotun-ui.github.io/MLS'
+          : localBase;
 
       let lastUrl = '';
 
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
+      const buildLink = () => {
+        if (!form.reportValidity()) return '';
         const data = Object.fromEntries(new FormData(form).entries());
         lastUrl = MW.buildOnboardingUrl(data.baseUrl, data);
         out.textContent = lastUrl;
@@ -114,12 +118,25 @@
           <li><strong>Total to pay:</strong> ${fees.grandTotalLabel}</li>
           ${fees.items.map((i) => `<li>${i.label}: ${i.amountLabel}</li>`).join('')}
         `;
+        return lastUrl;
+      };
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        buildLink();
+      });
+
+      openLink.addEventListener('click', (e) => {
+        const url = lastUrl || buildLink();
+        if (!url) {
+          e.preventDefault();
+          return;
+        }
+        openLink.href = url;
       });
 
       copyBtn.addEventListener('click', async () => {
-        if (!lastUrl) {
-          form.requestSubmit();
-        }
+        if (!lastUrl) buildLink();
         if (!lastUrl) return;
         try {
           await navigator.clipboard.writeText(lastUrl);

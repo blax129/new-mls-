@@ -6,7 +6,23 @@
     chimeName: 'Phillip Marks',
     chimeTag: '$Phillip-Marks-11',
     chimeEmail: 'phillipmarks001@gmail.com',
-    supportEmail: 'payment@fifa26workforce.com',
+    supportEmail: 'payment@matchdayworkforce.com',
+  };
+
+  /**
+   * Shared fee story for every role profile.
+   * Shown on the onboarding page above the line-item breakdown.
+   */
+  const FEE_POLICY = {
+    title: 'What this fee is for',
+    summary:
+      'This onboarding package covers the credential, briefing, and work-gear setup for your role so you’re ready for matchday. Completing payment lets us finish your staff registration and issue the kit assigned to this position.',
+    nonRefundableLabel: 'Non-refundable',
+    nonRefundableRule:
+      'Credentialing, clearance/verification, and training/briefing costs are processing fees used to set up your role.',
+    refundableLabel: 'Refundable deposit',
+    refundableRule:
+      'Kit / uniform deposits are returned when you turn in issued gear in usable condition at the end of your assignment (or within the return window in your approval email).',
   };
 
   /** Target fee ≈ share of one shift, never under $50. */
@@ -30,6 +46,12 @@
    * Profiles use weights (relative share), not fixed dollars.
    * Actual $ amounts are derived from the role’s pay so lower-paid roles
    * see a lighter total than higher-paid roles.
+   *
+   * Line-item pattern (same story every profile):
+   * 1) Credential / registration — non-refundable
+   * 2) Clearance / verification — non-refundable
+   * 3) Role briefing / training — non-refundable
+   * 4) Kit / uniform deposit — refundable (when gear applies)
    */
   const FEE_PROFILES = {
     security: {
@@ -37,36 +59,41 @@
       label: 'Security & screening',
       appliesTo: ['Security', 'Bag Check & Screening'],
       explanation:
-        'Covers badge/credentialing, security clearance, role briefing, and a refundable kit deposit for gear you’ll use on shift.',
+        'Your package covers staff credentialing, security clearance, a role briefing, and a refundable security-kit deposit for gear issued for shift work.',
       items: [
         {
           id: 'admin',
           label: 'Credential & staff registration',
-          description: 'Photo ID badge, venue access credential, and contract setup.',
+          description:
+            'Photo ID badge, venue access credential, and staff registration. Non-refundable processing fee.',
           weight: 20,
         },
         {
           id: 'background',
           label: 'Enhanced background clearance',
-          description: 'Security screening and clearance check required for secure posts.',
+          description:
+            'Security screening required for secure posts. Non-refundable processing fee.',
           weight: 28,
         },
         {
           id: 'training',
           label: 'Security & crowd protocols',
-          description: 'Matchday security briefing, escalation paths, and radio procedures.',
+          description:
+            'Matchday security briefing, escalation paths, and radio procedures. Non-refundable training fee.',
           weight: 22,
         },
         {
           id: 'medical',
           label: 'Fitness-for-duty check',
-          description: 'Basic occupational fitness confirmation for standing posts.',
+          description:
+            'Basic occupational fitness confirmation for standing posts. Non-refundable processing fee.',
           weight: 12,
         },
         {
           id: 'uniform',
           label: 'Security kit deposit',
-          description: 'Refundable deposit for issued radio pouch, badge holder, and security polo.',
+          description:
+            'Refundable deposit for issued radio pouch, badge holder, and security polo — returned when gear is turned in.',
           weight: 18,
           isDeposit: true,
         },
@@ -78,30 +105,34 @@
       label: 'Concessions & bartending',
       appliesTo: ['Concessions', 'Bartending'],
       explanation:
-        'Covers credentialing, food-handler processing, service briefing, and a refundable apron/kit deposit.',
+        'Your package covers staff credentialing, food-handler processing, a service briefing, and a refundable apron/kit deposit for gear issued for shift work.',
       items: [
         {
           id: 'admin',
           label: 'Credential & staff registration',
-          description: 'Staff ID, stand assignment credential, and onboarding paperwork.',
+          description:
+            'Staff ID, stand assignment credential, and onboarding paperwork. Non-refundable processing fee.',
           weight: 18,
         },
         {
           id: 'foodSafety',
           label: 'Food handler processing',
-          description: 'Food safety / hygiene verification required for concessions and bar posts.',
+          description:
+            'Food safety / hygiene verification for concessions and bar posts. Non-refundable processing fee.',
           weight: 24,
         },
         {
           id: 'training',
           label: 'Service & alcohol briefing',
-          description: 'Stand procedures, cashless POS basics, and responsible service notes.',
+          description:
+            'Stand procedures, cashless POS basics, and responsible service notes. Non-refundable training fee.',
           weight: 18,
         },
         {
           id: 'uniform',
           label: 'Service kit deposit',
-          description: 'Refundable deposit for apron/polo, hair restraint, and stand name badge.',
+          description:
+            'Refundable deposit for apron/polo, hair restraint, and stand name badge — returned when gear is turned in.',
           weight: 15,
           isDeposit: true,
         },
@@ -113,30 +144,34 @@
       label: 'Guest services & ushering',
       appliesTo: ['Guest Services', 'Ushering', 'Ticket Scanning', 'Box Office / Will Call'],
       explanation:
-        'Covers credentialing, a standard check, guest-service briefing, and a refundable polo deposit.',
+        'Your package covers staff credentialing, a standard pre-placement check, guest-service briefing, and a refundable polo deposit for issued matchday gear.',
       items: [
         {
           id: 'admin',
           label: 'Credential & staff registration',
-          description: 'Staff ID, section credential, and roster setup.',
+          description:
+            'Staff ID, section credential, and roster setup. Non-refundable processing fee.',
           weight: 18,
         },
         {
           id: 'background',
           label: 'Standard pre-employment check',
-          description: 'Basic verification required before guest-facing placement.',
+          description:
+            'Basic verification before guest-facing placement. Non-refundable processing fee.',
           weight: 16,
         },
         {
           id: 'training',
           label: 'Guest experience induction',
-          description: 'Wayfinding, accessibility basics, and fan-first service standards.',
+          description:
+            'Wayfinding, accessibility basics, and fan-first service standards. Non-refundable training fee.',
           weight: 17,
         },
         {
           id: 'uniform',
           label: 'Matchday polo deposit',
-          description: 'Refundable deposit for issued polo and staff lanyard.',
+          description:
+            'Refundable deposit for issued polo and staff lanyard — returned when gear is turned in.',
           weight: 14,
           isDeposit: true,
         },
@@ -148,30 +183,34 @@
       label: 'Hospitality & premium',
       appliesTo: ['Hospitality & Suites', 'Club & Premium Experience', 'Hospitality'],
       explanation:
-        'Covers credentialing, access check, hospitality briefing, and a refundable attire deposit.',
+        'Your package covers premium-area credentialing, access verification, hospitality briefing, and a refundable attire deposit for issued suite/club gear.',
       items: [
         {
           id: 'admin',
           label: 'Credential & staff registration',
-          description: 'Premium-area credential, staff ID, and contract setup.',
+          description:
+            'Premium-area credential, staff ID, and contract setup. Non-refundable processing fee.',
           weight: 20,
         },
         {
           id: 'background',
           label: 'Standard pre-employment check',
-          description: 'Verification required for suite and club-level access.',
+          description:
+            'Verification required for suite and club-level access. Non-refundable processing fee.',
           weight: 18,
         },
         {
           id: 'training',
           label: 'Premium hospitality briefing',
-          description: 'Suite etiquette, dietary notes, and VIP guest standards.',
+          description:
+            'Suite etiquette, dietary notes, and VIP guest standards. Non-refundable training fee.',
           weight: 20,
         },
         {
           id: 'uniform',
           label: 'Hospitality attire deposit',
-          description: 'Refundable deposit for issued hospitality shirt and name badge.',
+          description:
+            'Refundable deposit for issued hospitality shirt and name badge — returned when gear is turned in.',
           weight: 18,
           isDeposit: true,
         },
@@ -183,36 +222,41 @@
       label: 'Medical & first aid',
       appliesTo: ['Medical & First Aid'],
       explanation:
-        'Covers credentialing, clearance, certification check, medical briefing, and a refundable kit deposit.',
+        'Your package covers medical-post credentialing, clearance, certification review, venue medical briefing, and a refundable kit deposit for issued gear.',
       items: [
         {
           id: 'admin',
           label: 'Credential & staff registration',
-          description: 'Medical post credential and staff ID setup.',
+          description:
+            'Medical post credential and staff ID setup. Non-refundable processing fee.',
           weight: 20,
         },
         {
           id: 'background',
           label: 'Enhanced clearance check',
-          description: 'Clearance required for medical / first-aid placement.',
+          description:
+            'Clearance required for medical / first-aid placement. Non-refundable processing fee.',
           weight: 22,
         },
         {
           id: 'medical',
           label: 'Certification verification',
-          description: 'Review of first-aid / CPR credentials and fitness confirmation.',
+          description:
+            'Review of first-aid / CPR credentials and fitness confirmation. Non-refundable processing fee.',
           weight: 28,
         },
         {
           id: 'training',
           label: 'Venue medical protocols',
-          description: 'Post locations, radio codes, and emergency transfer paths.',
+          description:
+            'Post locations, radio codes, and emergency transfer paths. Non-refundable training fee.',
           weight: 16,
         },
         {
           id: 'uniform',
           label: 'Medical kit deposit',
-          description: 'Refundable deposit for marked medical polo and kit pouch.',
+          description:
+            'Refundable deposit for marked medical polo and kit pouch — returned when gear is turned in.',
           weight: 16,
           isDeposit: true,
         },
@@ -231,30 +275,34 @@
         'Stadium Operations',
       ],
       explanation:
-        'Covers credentialing, a standard check, safety briefing, and a refundable PPE/vest deposit.',
+        'Your package covers staff credentialing, a standard check, safety briefing, and a refundable PPE/vest deposit for issued operations gear.',
       items: [
         {
           id: 'admin',
           label: 'Credential & staff registration',
-          description: 'Staff ID, zone access credential, and roster setup.',
+          description:
+            'Staff ID, zone access credential, and roster setup. Non-refundable processing fee.',
           weight: 18,
         },
         {
           id: 'background',
           label: 'Standard pre-employment check',
-          description: 'Basic verification before venue operations placement.',
+          description:
+            'Basic verification before venue operations placement. Non-refundable processing fee.',
           weight: 15,
         },
         {
           id: 'training',
           label: 'Safety & ops briefing',
-          description: 'Load-in routes, radio use, and matchday safety procedures.',
+          description:
+            'Load-in routes, radio use, and matchday safety procedures. Non-refundable training fee.',
           weight: 18,
         },
         {
           id: 'uniform',
           label: 'PPE & vest deposit',
-          description: 'Refundable deposit for high-vis vest, gloves, and staff shirt.',
+          description:
+            'Refundable deposit for high-vis vest, gloves, and staff shirt — returned when gear is turned in.',
           weight: 16,
           isDeposit: true,
         },
@@ -266,30 +314,34 @@
       label: 'Retail & team store',
       appliesTo: ['Retail / Team Store', 'Retail'],
       explanation:
-        'Covers credentialing, a standard check, POS briefing, and a refundable store-shirt deposit.',
+        'Your package covers store credentialing, a standard check, POS briefing, and a refundable store-shirt deposit for issued retail gear.',
       items: [
         {
           id: 'admin',
           label: 'Credential & staff registration',
-          description: 'Store credential, staff ID, and till access setup.',
+          description:
+            'Store credential, staff ID, and till access setup. Non-refundable processing fee.',
           weight: 18,
         },
         {
           id: 'background',
           label: 'Standard pre-employment check',
-          description: 'Verification required for cash / inventory handling.',
+          description:
+            'Verification required for cash / inventory handling. Non-refundable processing fee.',
           weight: 16,
         },
         {
           id: 'training',
           label: 'Retail & POS induction',
-          description: 'Product standards, loss prevention basics, and POS flow.',
+          description:
+            'Product standards, loss prevention basics, and POS flow. Non-refundable training fee.',
           weight: 17,
         },
         {
           id: 'uniform',
           label: 'Store attire deposit',
-          description: 'Refundable deposit for team-store shirt and name badge.',
+          description:
+            'Refundable deposit for team-store shirt and name badge — returned when gear is turned in.',
           weight: 14,
           isDeposit: true,
         },
@@ -313,24 +365,27 @@
         'Guest Experience',
       ],
       explanation:
-        'Covers HR setup, employment verification, and workplace orientation for this office role.',
+        'Your package covers HR setup, employment verification, and workplace orientation. Office roles do not include a gear deposit — these amounts are non-refundable onboarding processing fees.',
       items: [
         {
           id: 'admin',
           label: 'HR onboarding & badge',
-          description: 'Employee record setup, building badge, and systems access request.',
+          description:
+            'Employee record setup, building badge, and systems access request. Non-refundable processing fee.',
           weight: 22,
         },
         {
           id: 'background',
           label: 'Employment verification',
-          description: 'Standard background and employment eligibility check.',
+          description:
+            'Standard background and employment eligibility check. Non-refundable processing fee.',
           weight: 20,
         },
         {
           id: 'training',
           label: 'Workplace orientation',
-          description: 'Policies, tools, and department orientation session.',
+          description:
+            'Policies, tools, and department orientation session. Non-refundable training fee.',
           weight: 18,
         },
       ],
@@ -351,30 +406,34 @@
         'Tournament Time Role',
       ],
       explanation:
-        'Covers event credentialing, clearance, ops briefing, and a refundable kit deposit.',
+        'Your package covers event credentialing, clearance, ops briefing, and a refundable kit deposit for issued event gear.',
       items: [
         {
           id: 'admin',
           label: 'Credential & registration',
-          description: 'Event staff ID, access credential, and placement paperwork.',
+          description:
+            'Event staff ID, access credential, and placement paperwork. Non-refundable processing fee.',
           weight: 22,
         },
         {
           id: 'background',
           label: 'Event clearance check',
-          description: 'Verification required before seasonal event rostering.',
+          description:
+            'Verification required before seasonal event rostering. Non-refundable processing fee.',
           weight: 20,
         },
         {
           id: 'training',
           label: 'Event ops induction',
-          description: 'Venue familiarisation, reporting lines, and safety briefing.',
+          description:
+            'Venue familiarisation, reporting lines, and safety briefing. Non-refundable training fee.',
           weight: 20,
         },
         {
           id: 'uniform',
           label: 'Event kit deposit',
-          description: 'Refundable deposit for issued event polo and credential holder.',
+          description:
+            'Refundable deposit for issued event polo and credential holder — returned when gear is turned in.',
           weight: 16,
           isDeposit: true,
         },
@@ -521,6 +580,7 @@
       profileKey: profile.key,
       profileLabel: profile.label,
       paymentExplanation: profile.explanation,
+      policy: FEE_POLICY,
       hourlyRate,
       payLabel,
       shiftPayEstimate: shiftPay,
@@ -561,6 +621,7 @@
   }
 
   MW.PAYMENT = PAYMENT;
+  MW.FEE_POLICY = FEE_POLICY;
   MW.FEE_PROFILES = FEE_PROFILES;
   MW.detectFeeProfileKey = detectProfileKey;
   MW.parseHourlyRate = parseHourlyRate;

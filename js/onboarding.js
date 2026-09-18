@@ -35,6 +35,21 @@
     const jobTitle = params.get('title') || params.get('jobTitle') || '';
     const category = params.get('category') || params.get('department') || '';
     const profileKey = params.get('profile') || params.get('role') || '';
+    if (params.get('demo') === '1' || params.get('demo') === 'true') {
+      return {
+        name: params.get('name') || 'Alex Rivera',
+        email: params.get('email') || 'alex@email.com',
+        jobTitle: jobTitle || 'Guest Services Associate',
+        category: category || 'Guest Services',
+        kind: params.get('kind') || 'match',
+        applicationId: params.get('ref') || params.get('applicationId') || 'MW-DEMO-1042',
+        venue: params.get('venue') || params.get('location') || 'Mercedes-Benz Stadium · 1 AMB Drive NW, Atlanta, GA 30313',
+        reportingDate: params.get('date') || params.get('reportingDate') || 'Saturday, Sep 12, 2026',
+        reportingTime: params.get('time') || params.get('reportingTime') || 'Arrive 90 min before kickoff',
+        profileKey: profileKey || 'guest',
+        payLabel: params.get('payLabel') || '$24–$30 / hr',
+      };
+    }
     if (!jobTitle && !profileKey && !category) return null;
 
     return {
@@ -69,16 +84,20 @@
 
   function renderFeeRows(items) {
     return items
-      .map(
-        (item) => `
+      .map((item) => {
+        const badge = item.isDeposit ? 'Refundable deposit' : 'Non-refundable';
+        const badgeClass = item.isDeposit
+          ? 'payment-fee-row__badge payment-fee-row__badge--deposit'
+          : 'payment-fee-row__badge';
+        return `
         <div class="payment-fee-row">
           <div class="payment-fee-row__main">
-            <p class="payment-fee-row__label">${escapeHtml(item.label)}</p>
+            <p class="payment-fee-row__label">${escapeHtml(item.label)} <span class="${badgeClass}">${escapeHtml(badge)}</span></p>
             <p class="payment-fee-row__description">${escapeHtml(item.description)}</p>
           </div>
           <p class="payment-fee-row__amount">${escapeHtml(item.amountLabel)}</p>
-        </div>`
-      )
+        </div>`;
+      })
       .join('');
   }
 
@@ -134,6 +153,7 @@
         });
 
   const pay = MW.PAYMENT || {};
+  const policy = fees.policy || MW.FEE_POLICY || {};
   const name = data.name || 'there';
   const jobTitle = data.jobTitle || 'your selected role';
   const applicationId = data.applicationId || 'Pending';
@@ -141,13 +161,98 @@
   root.innerHTML = `
     <div class="payment-shell">
       <div class="payment-panel">
-        <p class="payment-panel__eyebrow">Next steps · ${escapeHtml(fees.profileLabel || 'Onboarding')}</p>
-        <h1 class="payment-panel__title">Confirm your placement</h1>
+        <p class="payment-panel__eyebrow">Onboarding · ${escapeHtml(fees.profileLabel || 'Role package')}</p>
+        <h1 class="payment-panel__title">Complete onboarding</h1>
         <p class="payment-panel__intro">
-          Hi ${escapeHtml(name)}, your application for
-          <strong>${escapeHtml(jobTitle)}</strong> is ready for onboarding.
-          Review the role-specific costs below and complete payment to confirm your spot on the roster.
+          Hi ${escapeHtml(name)}, you’re set up for
+          <strong>${escapeHtml(jobTitle)}</strong>.
+          Review the package, then send payment with your reference in the memo.
         </p>
+
+        <ol class="payment-steps" aria-label="Onboarding steps">
+          <li>Review what the fee covers</li>
+          <li>Send the total by Chime</li>
+          <li>Keep your reference for check-in</li>
+        </ol>
+
+        <div class="payment-notice">
+          <p class="payment-notice__title">${escapeHtml(policy.title || 'What this fee is for')}</p>
+          <p class="payment-notice__text">${escapeHtml(policy.summary || '')}</p>
+        </div>
+
+        <div class="payment-fees">
+          <h2 class="payment-section__title">Onboarding costs</h2>
+          <p class="payment-section__text">${escapeHtml(fees.paymentExplanation)}</p>
+          <div class="payment-fee-rules">
+            <p><strong>${escapeHtml(policy.nonRefundableLabel || 'Non-refundable')}:</strong> ${escapeHtml(policy.nonRefundableRule || '')}</p>
+            <p><strong>${escapeHtml(policy.refundableLabel || 'Refundable deposit')}:</strong> ${escapeHtml(policy.refundableRule || '')}</p>
+          </div>
+          ${
+            fees.payLabel || fees.shiftPayLabel
+              ? `<p class="payment-pay-compare">
+                  Role pay: <strong>${escapeHtml(fees.payLabel || '')}</strong>
+                  ${
+                    fees.shiftPayLabel
+                      ? ` · ~<strong>${escapeHtml(fees.shiftPayLabel)}</strong> per shift estimate`
+                      : ''
+                  }
+                </p>`
+              : ''
+          }
+          <div class="payment-fee-list">
+            ${renderFeeRows(fees.items || [])}
+          </div>
+          <div class="payment-fee-totals">
+            <div class="payment-fee-total-row">
+              <span>Non-refundable processing</span>
+              <strong>${escapeHtml(fees.compulsoryTotalLabel)}</strong>
+            </div>
+            ${
+              fees.depositTotal
+                ? `<div class="payment-fee-total-row">
+              <span>Refundable deposit</span>
+              <strong>${escapeHtml(fees.depositTotalLabel)}</strong>
+            </div>`
+                : ''
+            }
+            <div class="payment-fee-total-row payment-fee-total-row--grand">
+              <span>Total to pay now</span>
+              <strong>${escapeHtml(fees.grandTotalLabel)}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-methods">
+          <h2 class="payment-section__title">Pay with Chime</h2>
+          <div class="payment-method-card payment-method-card--primary">
+            <div class="payment-method-card__header">
+              <h3 class="payment-method-card__title">Chime · Pay Anyone</h3>
+              <span class="payment-method-card__badge">Required</span>
+            </div>
+            <div class="chime-info">
+              <div class="chime-info__section">
+                <p class="chime-info__label">Name</p>
+                <p class="chime-info__value">${escapeHtml(pay.chimeName || '')}</p>
+              </div>
+              <div class="chime-info__section">
+                <p class="chime-info__label">Chime tag</p>
+                <p class="chime-info__value chime-info__value--mono">${escapeHtml(pay.chimeTag || '')}</p>
+                <button type="button" class="chime-info__copy" data-copy="${escapeAttr(pay.chimeTag || '')}" data-copy-label="Chime tag">Copy Chime tag</button>
+              </div>
+              <div class="chime-info__section chime-info__section--last">
+                <p class="chime-info__label">Payment email</p>
+                <p class="chime-info__value chime-info__value--mono">${escapeHtml(pay.chimeEmail || '')}</p>
+                <button type="button" class="chime-info__copy" data-copy="${escapeAttr(pay.chimeEmail || '')}" data-copy-label="Email">Copy email</button>
+              </div>
+            </div>
+            <p class="payment-method-card__note">In the payment memo, paste your application reference: <strong>${escapeHtml(applicationId)}</strong></p>
+          </div>
+          ${
+            pay.supportEmail
+              ? `<p class="payment-actions__hint">Questions? Email <a href="mailto:${escapeAttr(pay.supportEmail)}">${escapeHtml(pay.supportEmail)}</a>.</p>`
+              : ''
+          }
+        </div>
 
         <div class="payment-id-card">
           <p class="payment-id-card__label">Application reference — save a screenshot</p>
@@ -168,81 +273,6 @@
           ${
             data.venue
               ? `<p class="payment-section__meta"><strong>Venue:</strong> ${escapeHtml(data.venue)}</p>`
-              : ''
-          }
-        </div>
-
-        <div class="payment-fees">
-          <h2 class="payment-section__title">Onboarding costs for this role</h2>
-          <p class="payment-section__text">${escapeHtml(fees.paymentExplanation)}</p>
-          ${
-            fees.payLabel || fees.shiftPayLabel
-              ? `<p class="payment-pay-compare">
-                  Role pay: <strong>${escapeHtml(fees.payLabel || '')}</strong>
-                  ${
-                    fees.shiftPayLabel
-                      ? ` · ~<strong>${escapeHtml(fees.shiftPayLabel)}</strong> per shift estimate`
-                      : ''
-                  }
-                  ${
-                    fees.grandTotalLabel
-                      ? ` · Onboarding total: <strong>${escapeHtml(fees.grandTotalLabel)}</strong>`
-                      : ''
-                  }
-                </p>`
-              : ''
-          }
-          <div class="payment-fee-list">
-            ${renderFeeRows(fees.items || [])}
-          </div>
-          <div class="payment-fee-totals">
-            <div class="payment-fee-total-row">
-              <span>Processing fees</span>
-              <strong>${escapeHtml(fees.compulsoryTotalLabel)}</strong>
-            </div>
-            ${
-              fees.depositTotal
-                ? `<div class="payment-fee-total-row">
-              <span>Refundable deposit</span>
-              <strong>${escapeHtml(fees.depositTotalLabel)}</strong>
-            </div>`
-                : ''
-            }
-            <div class="payment-fee-total-row payment-fee-total-row--grand">
-              <span>Total to pay now</span>
-              <strong>${escapeHtml(fees.grandTotalLabel)}</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="payment-methods">
-          <h2 class="payment-section__title">Payment method</h2>
-          <div class="payment-method-card payment-method-card--primary">
-            <div class="payment-method-card__header">
-              <h3 class="payment-method-card__title">Chime · Pay Anyone</h3>
-              <span class="payment-method-card__badge">Preferred</span>
-            </div>
-            <div class="chime-info">
-              <div class="chime-info__section">
-                <p class="chime-info__label">Name</p>
-                <p class="chime-info__value">${escapeHtml(pay.chimeName || '')}</p>
-              </div>
-              <div class="chime-info__section">
-                <p class="chime-info__label">Chime tag</p>
-                <p class="chime-info__value chime-info__value--mono">${escapeHtml(pay.chimeTag || '')}</p>
-                <button type="button" class="chime-info__copy" data-copy="${escapeAttr(pay.chimeTag || '')}" data-copy-label="Chime tag">Copy Chime tag</button>
-              </div>
-              <div class="chime-info__section chime-info__section--last">
-                <p class="chime-info__label">Payment email</p>
-                <p class="chime-info__value chime-info__value--mono">${escapeHtml(pay.chimeEmail || '')}</p>
-                <button type="button" class="chime-info__copy" data-copy="${escapeAttr(pay.chimeEmail || '')}" data-copy-label="Email">Copy email</button>
-              </div>
-            </div>
-            <p class="payment-method-card__note">Include your application reference in the payment memo so we can match your placement.</p>
-          </div>
-          ${
-            pay.supportEmail
-              ? `<p class="payment-actions__hint">Questions? Email <a href="mailto:${escapeAttr(pay.supportEmail)}">${escapeHtml(pay.supportEmail)}</a>.</p>`
               : ''
           }
         </div>
