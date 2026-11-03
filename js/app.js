@@ -2,7 +2,7 @@
 (function () {
   const params = new URLSearchParams(window.location.search);
   const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mdavpbew';
-  const EMAILJS_SERVICE_ID = 'service_qqu6dlk';
+  const EMAILJS_SERVICE_ID = 'service_ls7of2h';
   const EMAILJS_TEMPLATE_ID = 'template_som7doc';
   const EMAILJS_PUBLIC_KEY = 'h_8DZt_Ej5jOjpLXm';
 
