@@ -150,6 +150,19 @@
       </fieldset>
       <div class="onboarding-chime-details" id="onboarding-chime-details" aria-live="polite">${chimeDetails}</div>
       <div class="onboarding-methods__message" id="onboarding-method-message" aria-live="polite">Use only the Chime recipient and instructions confirmed by the hiring team. If payment details are not in your approval email, contact the team before sending money.</div>
+      <section class="onboarding-chime-guide" id="onboarding-chime-guide" aria-labelledby="onboarding-chime-guide-title">
+        <h3 id="onboarding-chime-guide-title">Before using Chime</h3>
+        <ol>
+          <li>Verify the job and any requested charge directly with the organization using contact details from its official website.</li>
+          <li>Confirm the recipient and exact amount with the hiring team. If anything is missing or does not match, do not send money.</li>
+          <li>Chime warns that Pay Anyone payments to another Chime member are instant and irreversible, and says Chime will never ask you to send money through Pay Anyone.</li>
+        </ol>
+        <p>Download Chime only from its official app store listing:</p>
+        <div class="onboarding-chime-guide__links">
+          <a href="https://apps.apple.com/us/app/chime-mobile-banking/id836215269" target="_blank" rel="noopener noreferrer">Chime for iPhone</a>
+          <a href="https://play.google.com/store/apps/details?id=com.onedebit.chime" target="_blank" rel="noopener noreferrer">Chime for Android</a>
+        </div>
+      </section>
     </section>
     <section class="onboarding-fees" aria-labelledby="onboarding-fees-title">
       <p class="onboarding-eyebrow">Role-specific costs</p>
@@ -164,6 +177,7 @@
 
   const methodMessage = document.getElementById('onboarding-method-message');
   const chimeDetailsSection = document.getElementById('onboarding-chime-details');
+  const chimeGuide = document.getElementById('onboarding-chime-guide');
   root.querySelectorAll('input[name="onboarding-payment-method"]').forEach((input) => {
     input.addEventListener('change', () => {
       root.querySelectorAll('.onboarding-method-option').forEach((option) => {
@@ -171,6 +185,7 @@
       });
       if (!methodMessage) return;
       if (chimeDetailsSection) chimeDetailsSection.hidden = input.value !== 'chime';
+      if (chimeGuide) chimeGuide.hidden = input.value !== 'chime';
       methodMessage.classList.toggle('is-maintenance', input.value === 'card');
       methodMessage.textContent = input.value === 'card'
         ? 'Card payments are under maintenance right now. Please choose Chime or contact the hiring team for help.'

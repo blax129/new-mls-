@@ -3,9 +3,9 @@
   const MW = global.MW || (global.MW = {});
 
   const PAYMENT = {
-    chimeName: 'Phillip Marks',
-    chimeTag: '$Phillip-Marks-11',
-    chimeEmail: 'phillipmarks001@gmail.com',
+    chimeName: '',
+    chimeTag: '',
+    chimeEmail: '',
     supportEmail: 'payment@matchdayworkforce.com',
   };
 
@@ -26,7 +26,7 @@
   };
 
   /** Target fee ≈ share of one shift, never under $50. */
-  const FEE_SHARE_OF_SHIFT = 0.22;
+  const FEE_SHARE_OF_SHIFT = 0.11;
   const FEE_FLOOR = 50;
   const FEE_CEILING = 95;
   const HOURS_PER_SHIFT = 8;
@@ -505,9 +505,9 @@
       return n;
     }
 
-    if (input.kind === 'club') return 36;
-    if (input.kind === 'event') return 32;
-    return 26;
+    if (input.kind === 'club') return 72;
+    if (input.kind === 'event') return 64;
+    return 52;
   }
 
   function estimateShiftPay(hourlyRate, input = {}) {

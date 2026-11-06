@@ -2605,11 +2605,35 @@ ul { list-style: none; }
   .dept-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+.onboarding-trust {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #dce3ec;
+}
+.onboarding-trust__summary {
+  color: #0b1f3a;
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.onboarding-trust__content { padding-top: 1rem; }
+.onboarding-trust h2 {
+  margin: 0 0 .85rem;
+  color: #0b1f3a;
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+.onboarding-trust__list { display: grid; gap: .8rem; margin: 0; }
+.onboarding-trust__list > div { display: grid; grid-template-columns: minmax(8rem, .35fr) 1fr; gap: .75rem; }
+.onboarding-trust__list dt { color: #64748b; font-size: .85rem; font-weight: 700; }
+.onboarding-trust__list dd { margin: 0; color: #526174; font-size: .9rem; line-height: 1.55; overflow-wrap: anywhere; }
+.onboarding-trust__list a { color: #0b1f3a; font-weight: 700; text-underline-offset: .15em; }
 @media (max-width: 960px) {
   :root { --nav-h: 80px; }
 
   .mls-intro,
   .multi-inner,
+  .onboarding-trust__list > div { grid-template-columns: 1fr; gap: .1rem; }
   .layout-split,
   .detail-layout,
   .dash-layout,
@@ -4205,6 +4229,56 @@ ul { list-style: none; }
 .onboarding-methods__message.is-maintenance {
   background: #fff7ed;
   color: #8a4617;
+}
+.onboarding-chime-guide {
+  margin-top: .9rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #f0d4a8;
+  border-radius: 10px;
+  background: #fffaf2;
+  color: #5b482d;
+}
+.onboarding-chime-guide[hidden] { display: none; }
+.onboarding-chime-guide h3 {
+  margin: 0 0 .55rem;
+  color: #593b12;
+  font-size: 1rem;
+}
+.onboarding-chime-guide ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: .88rem;
+  line-height: 1.55;
+}
+.onboarding-chime-guide li + li { margin-top: .4rem; }
+.onboarding-chime-guide p {
+  margin: .8rem 0 .45rem;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.onboarding-chime-guide__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+}
+.onboarding-chime-guide__links a {
+  display: inline-flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  padding: .55rem .85rem;
+  border: 1px solid #d9c49f;
+  border-radius: 7px;
+  background: #fff;
+  color: #0b1f3a;
+  font-size: .85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.onboarding-chime-guide__links a:hover,
+.onboarding-chime-guide__links a:focus-visible {
+  border-color: #0b1f3a;
+  text-decoration: underline;
 }
 .onboarding-fees {
   margin-top: 1rem;
