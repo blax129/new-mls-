@@ -13,18 +13,75 @@
   }
 
   function decodePayload() {
-    const encoded = new URLSearchParams(window.location.search).get('d');
-    if (!encoded) return null;
-
-    try {
-      const binary = atob(encoded);
-      const utf8 = Array.from(binary, (character) =>
-        `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`
-      ).join('');
-      return JSON.parse(decodeURIComponent(utf8));
-    } catch {
-      return null;
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('d');
+    if (encoded) {
+      try {
+        const binary = atob(encoded);
+        const utf8 = Array.from(binary, (character) =>
+          `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`
+        ).join('');
+        return JSON.parse(decodeURIComponent(utf8));
+      } catch {
+        return null;
+      }
     }
+
+    const role = (params.get('role') || '').trim();
+    const applicationId = (params.get('id') || params.get('ref') || '').trim();
+    if (!role && !applicationId) return null;
+
+    return {
+      role,
+      applicationId,
+      category: (params.get('cat') || params.get('category') || '').trim(),
+      pay: (params.get('pay') || params.get('payLabel') || '').trim(),
+      reporting: {
+        date: (params.get('date') || '').trim(),
+        time: (params.get('time') || '').trim(),
+        venue: (params.get('venue') || '').trim(),
+      },
+    };
+  }
+
+  function feesFromPayload(data) {
+    const fees = data && data.fees;
+    const items = fees && Array.isArray(fees.items) ? fees.items : [];
+    const totalCents = fees ? cents(fees.total) : null;
+    const amounts = items.map((item) => item && cents(item.amount));
+    const lineTotal = amounts.every((amount) => amount !== null)
+      ? amounts.reduce((sum, amount) => sum + amount, 0)
+      : null;
+
+    if (
+      items.length &&
+      items.every((item) => item && typeof item.label === 'string' && item.label.trim()) &&
+      totalCents !== null &&
+      lineTotal === totalCents
+    ) {
+      return fees;
+    }
+
+    const resolve = window.MW && typeof window.MW.resolveRoleFees === 'function'
+      ? window.MW.resolveRoleFees
+      : null;
+    if (!resolve || !data) return null;
+
+    const resolved = resolve({
+      title: data.role || data.jobTitle || '',
+      category: data.category || '',
+      payLabel: data.pay || data.payLabel || '',
+      kind: data.kind || '',
+    });
+    const format = window.MW.formatFeeMoney || ((n) => `$${Number(n).toFixed(2)}`);
+    return {
+      items: (resolved.items || []).map((item) => ({
+        label: item.label,
+        amount: format(item.amount),
+        isDeposit: Boolean(item.isDeposit),
+      })),
+      total: resolved.grandTotalLabel || format(resolved.grandTotal),
+    };
   }
 
   function cents(value) {
@@ -65,19 +122,13 @@
     }
   });
   if (reportingSection) reportingSection.hidden = !hasReportingInfo;
-  const fees = data && data.fees;
+  const fees = feesFromPayload(data);
   const items = fees && Array.isArray(fees.items) ? fees.items : [];
-  const totalCents = fees ? cents(fees.total) : null;
-  const amounts = items.map((item) => item && cents(item.amount));
-  const lineTotal = amounts.every((amount) => amount !== null)
-    ? amounts.reduce((sum, amount) => sum + amount, 0)
-    : null;
 
   if (
     !items.length ||
     items.some((item) => typeof item.label !== 'string' || !item.label.trim()) ||
-    totalCents === null ||
-    lineTotal !== totalCents
+    !fees.total
   ) {
     root.innerHTML = '<p class="onboarding-fees__unavailable">Fee breakdown unavailable. Please refer to the itemized amounts in your approval email.</p>';
     return;
