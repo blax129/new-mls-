@@ -88,7 +88,7 @@
           <h2>Upload Payment Confirmation</h2>
           <p class="pay-card__lead">After payment, upload a screenshot of your payment confirmation.</p>
           <label class="pay-drop" id="upload-area" for="screenshot">
-            <input type="file" id="screenshot" name="screenshot" accept="image/jpeg,image/png,image/webp">
+            <input type="file" id="screenshot" name="screenshot" accept="image/jpeg,image/png,image/webp" required>
             <span class="pay-drop__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
             </span>
@@ -150,7 +150,7 @@
             <input type="email" id="sender-email" name="sender-email" autocomplete="email" required>
           </label>
           <label class="onboarding-pay-field">
-            <span>Chime transaction reference</span>
+            <span>Chime transaction reference <small>(optional)</small></span>
             <input type="text" id="transaction-ref" name="transaction-ref" autocomplete="off">
           </label>
         </form>

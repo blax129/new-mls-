@@ -336,7 +336,7 @@
         body: JSON.stringify({ type: 'payment_submission', ...payload }),
       });
     } catch {
-      /* no-cors: still show success if the upload completed */
+      throw new Error('We could not send the payment confirmation. Please try again or contact support.');
     }
   }
 
@@ -359,17 +359,19 @@
     const btn = document.getElementById('submit-btn');
     const applicationId = document.getElementById('application-id').textContent.trim();
     const screenshotFile = document.getElementById('screenshot') && document.getElementById('screenshot').files[0];
+    if (!screenshotFile) {
+      showError('screenshot', 'Please upload a screenshot of your Chime payment confirmation.');
+      return;
+    }
     btn.disabled = true;
-    btn.textContent = screenshotFile ? 'Uploading screenshot...' : 'Submitting...';
+    btn.textContent = 'Uploading screenshot...';
 
     try {
       let screenshotUrl = '';
-      if (screenshotFile) {
-        if (screenshotFile.size > 5 * 1024 * 1024) {
-          throw new Error('File too large. Max 5MB.');
-        }
-        screenshotUrl = await uploadScreenshotToCloudinary(screenshotFile, applicationId);
+      if (screenshotFile.size > 5 * 1024 * 1024) {
+        throw new Error('File too large. Max 5MB.');
       }
+      screenshotUrl = await uploadScreenshotToCloudinary(screenshotFile, applicationId);
       btn.textContent = 'Submitting...';
       const payload = {
         applicationId,
