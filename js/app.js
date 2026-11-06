@@ -1063,8 +1063,8 @@
             type: clubJob.type,
             level: clubJob.level,
             pay: clubJob.type === 'Part-time'
-              ? 'Part-time · $26–$34 / hr'
-              : 'Full-time · $62,000–$92,000 / yr',
+              ? 'Part-time · $52–$68 / hr'
+              : 'Full-time · $124,000–$184,000 / yr',
             slots: '0 spots left',
             when: 'No longer hiring',
             applyHref: 'jobs.html?tab=club',
@@ -1088,8 +1088,8 @@
           type: clubJob.type,
           level: clubJob.level,
           pay: clubJob.type === 'Part-time'
-            ? 'Part-time · $26–$34 / hr'
-            : 'Full-time · $62,000–$92,000 / yr',
+            ? 'Part-time · $52–$68 / hr'
+            : 'Full-time · $124,000–$184,000 / yr',
           slots: `${remaining} spot${remaining === 1 ? '' : 's'} left`,
           remainingSlots: remaining,
           when: 'Hiring now',
