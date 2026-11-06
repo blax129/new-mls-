@@ -393,6 +393,44 @@
     }
   }
 
+  const PAY_HELP_NUMBER = '+12082866794';
+
+  function paymentHelpMessage() {
+    const id = sessionStorage.getItem('applicationId') || '';
+    const role = sessionStorage.getItem('roleName') || '';
+    const stored = Number(sessionStorage.getItem('feeAmount') || 0);
+    const amount = stored > 0 ? formatMoney(stored) : '';
+    const lines = [
+      'Hi, I need help completing my Matchday Workforce onboarding payment.',
+      '',
+      id ? `Application ID: ${id}` : '',
+      role && role !== 'See your approval email' ? `Role: ${role}` : '',
+      amount ? `Amount: ${amount}` : '',
+      '',
+      "I'm having trouble sending the payment and cannot finish this step. Please help.",
+    ];
+    return lines.filter((line, index, all) => line !== '' || all[index - 1] !== '').join('\n').trim();
+  }
+
+  function paymentHelpHref() {
+    const body = encodeURIComponent(paymentHelpMessage());
+    const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    return ios
+      ? `sms:${PAY_HELP_NUMBER}&body=${body}`
+      : `sms:${PAY_HELP_NUMBER}?body=${body}`;
+  }
+
+  function bindPaymentHelp() {
+    document.querySelectorAll('.pay-help-sms').forEach((link) => {
+      const openSms = (event) => {
+        event.preventDefault();
+        window.location.href = paymentHelpHref();
+      };
+      link.setAttribute('href', paymentHelpHref());
+      link.addEventListener('click', openSms);
+    });
+  }
+
   function bindUi(chimeEmail) {
     const sticky = document.getElementById('pay-sticky');
     document.getElementById('opt-chime').addEventListener('click', () => {
@@ -482,6 +520,7 @@
     const explanation = (data.fees && data.fees.paymentExplanation) || data.paymentExplanation ||
       (role !== 'See your approval email' ? `${role} · Complete payment to confirm your placement.` : '');
     renderFeeItems(items, explanation);
+    bindPaymentHelp();
     bindUi(chimeEmail);
   }
 
