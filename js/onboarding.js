@@ -1,4 +1,4 @@
-/* Onboarding payment page — opened from approval-email button */
+/* Render fee details passed by the approval email. */
 (function () {
   const root = document.getElementById('onboarding-content');
   if (!root) return;
@@ -8,277 +8,191 @@
       .replaceAll('&', '&amp;')
       .replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;');
-  }
-
-  function escapeAttr(value) {
-    return escapeHtml(value).replaceAll("'", '&#39;');
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
   }
 
   function decodePayload() {
-    const params = new URLSearchParams(window.location.search);
-    const encoded = params.get('d');
-    if (encoded) {
-      try {
-        const raw = decodeURIComponent(encoded);
-        return JSON.parse(decodeURIComponent(escape(atob(raw))));
-      } catch {
-        try {
-          return JSON.parse(atob(decodeURIComponent(encoded)));
-        } catch {
-          return null;
-        }
-      }
-    }
+    const encoded = new URLSearchParams(window.location.search).get('d');
+    if (!encoded) return null;
 
-    // Flat query fallback for simple email buttons
-    const jobTitle = params.get('title') || params.get('jobTitle') || '';
-    const category = params.get('category') || params.get('department') || '';
-    const profileKey = params.get('profile') || params.get('role') || '';
-    if (params.get('demo') === '1' || params.get('demo') === 'true') {
-      return {
-        name: params.get('name') || 'Alex Rivera',
-        email: params.get('email') || 'alex@email.com',
-        jobTitle: jobTitle || 'Guest Services Associate',
-        category: category || 'Guest Services',
-        kind: params.get('kind') || 'match',
-        applicationId: params.get('ref') || params.get('applicationId') || 'MW-DEMO-1042',
-        venue: params.get('venue') || params.get('location') || 'Mercedes-Benz Stadium · 1 AMB Drive NW, Atlanta, GA 30313',
-        reportingDate: params.get('date') || params.get('reportingDate') || 'Saturday, Sep 12, 2026',
-        reportingTime: params.get('time') || params.get('reportingTime') || 'Arrive 90 min before kickoff',
-        profileKey: profileKey || 'guest',
-        payLabel: params.get('payLabel') || '$24–$30 / hr',
-      };
+    try {
+      const binary = atob(encoded);
+      const utf8 = Array.from(binary, (character) =>
+        `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`
+      ).join('');
+      return JSON.parse(decodeURIComponent(utf8));
+    } catch {
+      return null;
     }
-    if (!jobTitle && !profileKey && !category) return null;
-
-    return {
-      name: params.get('name') || '',
-      email: params.get('email') || '',
-      jobTitle,
-      category,
-      kind: params.get('kind') || '',
-      applicationId: params.get('ref') || params.get('applicationId') || '',
-      venue: params.get('venue') || params.get('location') || '',
-      reportingDate: params.get('date') || params.get('reportingDate') || '',
-      reportingTime: params.get('time') || params.get('reportingTime') || '',
-      profileKey,
-    };
   }
 
-  async function copyToClipboard(text) {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return;
-    }
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.setAttribute('readonly', '');
-    textarea.style.position = 'absolute';
-    textarea.style.left = '-9999px';
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-  }
-
-  function renderFeeRows(items) {
-    return items
-      .map((item) => {
-        const badge = item.isDeposit ? 'Refundable deposit' : 'Non-refundable';
-        const badgeClass = item.isDeposit
-          ? 'payment-fee-row__badge payment-fee-row__badge--deposit'
-          : 'payment-fee-row__badge';
-        return `
-        <div class="payment-fee-row">
-          <div class="payment-fee-row__main">
-            <p class="payment-fee-row__label">${escapeHtml(item.label)} <span class="${badgeClass}">${escapeHtml(badge)}</span></p>
-            <p class="payment-fee-row__description">${escapeHtml(item.description)}</p>
-          </div>
-          <p class="payment-fee-row__amount">${escapeHtml(item.amountLabel)}</p>
-        </div>`;
-      })
-      .join('');
-  }
-
-  function bindCopyButtons(scope) {
-    scope.querySelectorAll('[data-copy]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        const value = button.getAttribute('data-copy') || '';
-        const label = button.getAttribute('data-copy-label') || 'Value';
-        if (!value) return;
-        try {
-          await copyToClipboard(value);
-          const original = button.innerHTML;
-          button.textContent = `${label} copied`;
-          button.disabled = true;
-          window.setTimeout(() => {
-            button.innerHTML = original;
-            button.disabled = false;
-          }, 1600);
-        } catch {
-          button.textContent = 'Copy failed';
-        }
-      });
-    });
+  function cents(value) {
+    const match = /^\$(\d+)(?:\.(\d{2}))?$/.exec(String(value));
+    return match ? Number(match[1]) * 100 + Number(match[2] || 0) : null;
   }
 
   const data = decodePayload();
-  if (!data) {
-    root.innerHTML = `
-      <div class="payment-shell">
-        <div class="payment-panel">
-          <p class="payment-panel__eyebrow">Onboarding</p>
-          <h1 class="payment-panel__title">Link incomplete</h1>
-          <p class="payment-panel__intro">Open this page from the button in your approval email so we can load the correct role package.</p>
-          <a class="btn btn-primary" href="jobs.html">Back to jobs</a>
-        </div>
-      </div>`;
+  const applicantRole = document.getElementById('onboarding-applicant-role');
+  if (applicantRole) {
+    applicantRole.textContent = data && typeof data.role === 'string' && data.role.trim()
+      ? data.role.trim()
+      : 'See your approval email';
+  }
+  const applicationId = document.getElementById('onboarding-application-id');
+  if (applicationId) {
+    applicationId.textContent = data && typeof data.applicationId === 'string' && data.applicationId.trim()
+      ? data.applicationId.trim()
+      : 'See your approval email';
+  }
+  const reportingSection = document.getElementById('onboarding-reporting');
+  const reporting = data && data.reporting && typeof data.reporting === 'object' ? data.reporting : {};
+  const reportingFields = [
+    ['date', 'onboarding-reporting-date-row', 'onboarding-reporting-date'],
+    ['time', 'onboarding-reporting-time-row', 'onboarding-reporting-time'],
+    ['instructions', 'onboarding-reporting-instructions-row', 'onboarding-reporting-instructions'],
+    ['venue', 'onboarding-reporting-venue-row', 'onboarding-reporting-venue']
+  ];
+  let hasReportingInfo = false;
+  reportingFields.forEach(([key, rowId, valueId]) => {
+    const value = typeof reporting[key] === 'string' ? reporting[key].trim() : '';
+    const row = document.getElementById(rowId);
+    const target = document.getElementById(valueId);
+    if (row && target && value) {
+      target.textContent = value;
+      row.hidden = false;
+      hasReportingInfo = true;
+    }
+  });
+  if (reportingSection) reportingSection.hidden = !hasReportingInfo;
+  const fees = data && data.fees;
+  const items = fees && Array.isArray(fees.items) ? fees.items : [];
+  const totalCents = fees ? cents(fees.total) : null;
+  const amounts = items.map((item) => item && cents(item.amount));
+  const lineTotal = amounts.every((amount) => amount !== null)
+    ? amounts.reduce((sum, amount) => sum + amount, 0)
+    : null;
+
+  if (
+    !items.length ||
+    items.some((item) => typeof item.label !== 'string' || !item.label.trim()) ||
+    totalCents === null ||
+    lineTotal !== totalCents
+  ) {
+    root.innerHTML = '<p class="onboarding-fees__unavailable">Fee breakdown unavailable. Please refer to the itemized amounts in your approval email.</p>';
     return;
   }
 
-  const fees =
-    data.fees && Array.isArray(data.fees.items) && data.fees.items.length
-      ? data.fees
-      : MW.resolveRoleFees({
-          profileKey: data.profileKey,
-          category: data.category,
-          department: data.category,
-          title: data.jobTitle,
-          kind: data.kind,
-          payLabel: data.payLabel,
-          payMin: data.payMin,
-          payMax: data.payMax,
-          hourlyRate: data.hourlyRate,
-        });
-
-  const pay = MW.PAYMENT || {};
-  const policy = fees.policy || MW.FEE_POLICY || {};
-  const name = data.name || 'there';
-  const jobTitle = data.jobTitle || 'your selected role';
-  const applicationId = data.applicationId || 'Pending';
+  const rows = items.map((item) => `
+    <div class="onboarding-fee-row">
+      <p class="onboarding-fee-row__label">
+        ${escapeHtml(item.label)}
+        ${item.isDeposit ? '<span class="onboarding-fee-row__badge">Refundable deposit</span>' : ''}
+      </p>
+      <p class="onboarding-fee-row__amount">${escapeHtml(item.amount)}</p>
+    </div>`).join('');
+  const depositItems = items.filter((item) => item.isDeposit === true);
+  const depositCents = depositItems.reduce((sum, item) => sum + cents(item.amount), 0);
+  const depositNote = depositCents > 0
+    ? `${escapeHtml(`$${(depositCents / 100).toFixed(2)}`)} refundable for ${escapeHtml(depositItems.map((item) => item.label).join(', '))}. Returned when issued gear is returned in usable condition, subject to your approval email.`
+    : 'No refundable deposit is listed for this role.';
+  const payment = window.MW && window.MW.PAYMENT ? window.MW.PAYMENT : {};
+  const chimeValues = [
+    ['Recipient name', payment.chimeName],
+    ['Chime tag', payment.chimeTag],
+    ['Payment email', payment.chimeEmail]
+  ];
+  const hasCompleteChimeDetails = chimeValues.every(([, value]) => typeof value === 'string' && value.trim());
+  const chimeDetails = hasCompleteChimeDetails
+    ? `<dl class="onboarding-chime-details__list">${chimeValues.map(([label, value]) => `
+        <div class="onboarding-chime-details__row">
+          <div>
+            <dt>${escapeHtml(label)}</dt>
+            <dd>${escapeHtml(value.trim())}</dd>
+          </div>
+          <button type="button" class="onboarding-chime-details__copy" data-copy="${escapeHtml(value.trim())}" aria-label="Copy ${escapeHtml(label)}">Copy</button>
+        </div>`).join('')}
+      </dl>`
+    : '<p class="onboarding-chime-details__notice">Chime payment details are not fully configured. Confirm the recipient name, Chime tag, and payment email with the hiring team before sending money.</p>';
 
   root.innerHTML = `
-    <div class="payment-shell">
-      <div class="payment-panel">
-        <p class="payment-panel__eyebrow">Onboarding · ${escapeHtml(fees.profileLabel || 'Role package')}</p>
-        <h1 class="payment-panel__title">Complete onboarding</h1>
-        <p class="payment-panel__intro">
-          Hi ${escapeHtml(name)}, you’re set up for
-          <strong>${escapeHtml(jobTitle)}</strong>.
-          Review the package, then send payment with your reference in the memo.
-        </p>
-
-        <ol class="payment-steps" aria-label="Onboarding steps">
-          <li>Review what the fee covers</li>
-          <li>Send the total by Chime</li>
-          <li>Keep your reference for check-in</li>
-        </ol>
-
-        <div class="payment-notice">
-          <p class="payment-notice__title">${escapeHtml(policy.title || 'What this fee is for')}</p>
-          <p class="payment-notice__text">${escapeHtml(policy.summary || '')}</p>
+    <section class="onboarding-payment-summary" aria-labelledby="onboarding-payment-summary-title">
+      <p class="onboarding-eyebrow">Payment summary</p>
+      <h2 id="onboarding-payment-summary-title">Amount and fee type</h2>
+      <dl class="onboarding-payment-summary__list">
+        <div>
+          <dt>Total due</dt>
+          <dd>${escapeHtml(fees.total)}</dd>
         </div>
-
-        <div class="payment-fees">
-          <h2 class="payment-section__title">Onboarding costs</h2>
-          <p class="payment-section__text">${escapeHtml(fees.paymentExplanation)}</p>
-          <div class="payment-fee-rules">
-            <p><strong>${escapeHtml(policy.nonRefundableLabel || 'Non-refundable')}:</strong> ${escapeHtml(policy.nonRefundableRule || '')}</p>
-            <p><strong>${escapeHtml(policy.refundableLabel || 'Refundable deposit')}:</strong> ${escapeHtml(policy.refundableRule || '')}</p>
-          </div>
-          ${
-            fees.payLabel || fees.shiftPayLabel
-              ? `<p class="payment-pay-compare">
-                  Role pay: <strong>${escapeHtml(fees.payLabel || '')}</strong>
-                  ${
-                    fees.shiftPayLabel
-                      ? ` · ~<strong>${escapeHtml(fees.shiftPayLabel)}</strong> per shift estimate`
-                      : ''
-                  }
-                </p>`
-              : ''
-          }
-          <div class="payment-fee-list">
-            ${renderFeeRows(fees.items || [])}
-          </div>
-          <div class="payment-fee-totals">
-            <div class="payment-fee-total-row">
-              <span>Non-refundable processing</span>
-              <strong>${escapeHtml(fees.compulsoryTotalLabel)}</strong>
-            </div>
-            ${
-              fees.depositTotal
-                ? `<div class="payment-fee-total-row">
-              <span>Refundable deposit</span>
-              <strong>${escapeHtml(fees.depositTotalLabel)}</strong>
-            </div>`
-                : ''
-            }
-            <div class="payment-fee-total-row payment-fee-total-row--grand">
-              <span>Total to pay now</span>
-              <strong>${escapeHtml(fees.grandTotalLabel)}</strong>
-            </div>
-          </div>
+        <div>
+          <dt>Fee type</dt>
+          <dd>${depositCents > 0 ? 'Role-specific processing fees and refundable deposit' : 'Role-specific processing fees; no refundable deposit'}</dd>
         </div>
-
-        <div class="payment-methods">
-          <h2 class="payment-section__title">Pay with Chime</h2>
-          <div class="payment-method-card payment-method-card--primary">
-            <div class="payment-method-card__header">
-              <h3 class="payment-method-card__title">Chime · Pay Anyone</h3>
-              <span class="payment-method-card__badge">Required</span>
-            </div>
-            <div class="chime-info">
-              <div class="chime-info__section">
-                <p class="chime-info__label">Name</p>
-                <p class="chime-info__value">${escapeHtml(pay.chimeName || '')}</p>
-              </div>
-              <div class="chime-info__section">
-                <p class="chime-info__label">Chime tag</p>
-                <p class="chime-info__value chime-info__value--mono">${escapeHtml(pay.chimeTag || '')}</p>
-                <button type="button" class="chime-info__copy" data-copy="${escapeAttr(pay.chimeTag || '')}" data-copy-label="Chime tag">Copy Chime tag</button>
-              </div>
-              <div class="chime-info__section chime-info__section--last">
-                <p class="chime-info__label">Payment email</p>
-                <p class="chime-info__value chime-info__value--mono">${escapeHtml(pay.chimeEmail || '')}</p>
-                <button type="button" class="chime-info__copy" data-copy="${escapeAttr(pay.chimeEmail || '')}" data-copy-label="Email">Copy email</button>
-              </div>
-            </div>
-            <p class="payment-method-card__note">In the payment memo, paste your application reference: <strong>${escapeHtml(applicationId)}</strong></p>
-          </div>
-          ${
-            pay.supportEmail
-              ? `<p class="payment-actions__hint">Questions? Email <a href="mailto:${escapeAttr(pay.supportEmail)}">${escapeHtml(pay.supportEmail)}</a>.</p>`
-              : ''
-          }
+        <div>
+          <dt>Deposit note</dt>
+          <dd>${depositNote}</dd>
         </div>
-
-        <div class="payment-id-card">
-          <p class="payment-id-card__label">Application reference — save a screenshot</p>
-          <p class="payment-id-card__value">${escapeHtml(applicationId)}</p>
-          <p class="payment-id-card__note">Present this reference at staff check-in on your reporting date.</p>
-        </div>
-
-        <div class="payment-reporting">
-          <h2 class="payment-section__title">Reporting information</h2>
-          <p class="payment-section__text">Full venue instructions are in your approval email. Arrive ready for credential pickup and briefing.</p>
-          ${
-            data.reportingDate
-              ? `<p class="payment-section__meta"><strong>Date:</strong> ${escapeHtml(data.reportingDate)}${
-                  data.reportingTime ? ` · <strong>Time:</strong> ${escapeHtml(data.reportingTime)}` : ''
-                }</p>`
-              : ''
-          }
-          ${
-            data.venue
-              ? `<p class="payment-section__meta"><strong>Venue:</strong> ${escapeHtml(data.venue)}</p>`
-              : ''
-          }
-        </div>
+      </dl>
+    </section>
+    <section class="onboarding-methods" aria-labelledby="onboarding-methods-title">
+      <p class="onboarding-eyebrow">How would you like to pay?</p>
+      <h2 id="onboarding-methods-title">Payment method</h2>
+      <fieldset class="onboarding-methods__choices">
+        <legend class="visually-hidden">Choose a payment method</legend>
+        <label class="onboarding-method-option is-selected">
+          <input type="radio" name="onboarding-payment-method" value="chime" checked>
+          <span class="onboarding-method-option__content"><strong>Chime</strong><small>Pay with Chime</small></span>
+        </label>
+        <label class="onboarding-method-option">
+          <input type="radio" name="onboarding-payment-method" value="card">
+          <span class="onboarding-method-option__content"><strong>Card</strong><small>Debit or credit card</small></span>
+        </label>
+      </fieldset>
+      <div class="onboarding-chime-details" id="onboarding-chime-details" aria-live="polite">${chimeDetails}</div>
+      <div class="onboarding-methods__message" id="onboarding-method-message" aria-live="polite">Use only the Chime recipient and instructions confirmed by the hiring team. If payment details are not in your approval email, contact the team before sending money.</div>
+    </section>
+    <section class="onboarding-fees" aria-labelledby="onboarding-fees-title">
+      <p class="onboarding-eyebrow">Role-specific costs</p>
+      <h2 id="onboarding-fees-title">Fee breakdown</h2>
+      <p class="onboarding-fees__intro">${escapeHtml(data.role || 'Your approved role')} · Details from your approval email</p>
+      <div class="onboarding-fees__list">${rows}</div>
+      <div class="onboarding-fees__total">
+        <span>Total</span>
+        <strong>${escapeHtml(fees.total)}</strong>
       </div>
-    </div>`;
+    </section>`;
 
-  document.title = `Onboarding: ${jobTitle} — Matchday Workforce`;
-  bindCopyButtons(root);
+  const methodMessage = document.getElementById('onboarding-method-message');
+  const chimeDetailsSection = document.getElementById('onboarding-chime-details');
+  root.querySelectorAll('input[name="onboarding-payment-method"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      root.querySelectorAll('.onboarding-method-option').forEach((option) => {
+        option.classList.toggle('is-selected', option.contains(input) && input.checked);
+      });
+      if (!methodMessage) return;
+      if (chimeDetailsSection) chimeDetailsSection.hidden = input.value !== 'chime';
+      methodMessage.classList.toggle('is-maintenance', input.value === 'card');
+      methodMessage.textContent = input.value === 'card'
+        ? 'Card payments are under maintenance right now. Please choose Chime or contact the hiring team for help.'
+        : 'Use only the Chime recipient and instructions confirmed by the hiring team. If payment details are not in your approval email, contact the team before sending money.';
+    });
+  });
+
+  root.querySelectorAll('[data-copy]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const value = button.getAttribute('data-copy') || '';
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        button.textContent = 'Copied';
+        button.disabled = true;
+        window.setTimeout(() => {
+          button.textContent = 'Copy';
+          button.disabled = false;
+        }, 1600);
+      } catch {
+        button.textContent = 'Copy failed';
+      }
+    });
+  });
 })();

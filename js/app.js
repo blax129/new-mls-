@@ -567,12 +567,15 @@
           ? MW.remainingMatchRoleSlots(fixture.id, role.id)
           : role.slots;
       const filled = remaining <= 0;
+      const lowGross = Math.round(role.payMin * role.shiftHoursMin);
+      const highGross = Math.round(role.payMax * role.shiftHoursMax);
       return `
       <article class="role-card${filled ? ' is-filled' : ''}">
         <div class="role-card-main">
           <h3>${role.title}</h3>
           <p class="role-card-meta">${role.category} · ${role.type} · ${fixture.stadium.name}</p>
           <p class="role-card-slots">${filled ? 'Filled' : `${remaining} spot${remaining === 1 ? '' : 's'} left`} · ${role.payLabel}</p>
+          <p class="role-card-estimate">Estimated shift: ${role.shiftHoursMin}–${role.shiftHoursMax} hours · Gross pay estimate: $${lowGross}–$${highGross}</p>
         </div>
         ${
           filled
@@ -1009,6 +1012,8 @@
           category: role.category,
           type: role.type,
           pay: role.payLabel,
+          estimatedShift: `${role.shiftHoursMin}–${role.shiftHoursMax} hours`,
+          estimatedGross: `$${Math.round(role.payMin * role.shiftHoursMin)}–$${Math.round(role.payMax * role.shiftHoursMax)}`,
           slots: `${remaining} spot${remaining === 1 ? '' : 's'} left`,
           remainingSlots: remaining,
           when: `${formatDate(fixture.date)} · ${fixture.time}`,
@@ -1297,6 +1302,8 @@
           <div class="role-detail__meta-item"><span>${categoryLabel}</span><strong>${opening.category}</strong></div>
           <div class="role-detail__meta-item"><span>Type</span><strong>${opening.type || opening.level || ''}</strong></div>
           <div class="role-detail__meta-item"><span>Pay</span><strong>${opening.pay}</strong></div>
+          ${opening.estimatedShift ? `<div class="role-detail__meta-item"><span>Estimated shift</span><strong>${opening.estimatedShift}</strong></div>` : ''}
+          ${opening.estimatedGross ? `<div class="role-detail__meta-item"><span>Estimated gross</span><strong>${opening.estimatedGross}<small>Before taxes; actual hours vary.</small></strong></div>` : ''}
           <div class="role-detail__meta-item"><span>Timing</span><strong>${opening.when}</strong></div>
         </div>
 
@@ -1387,6 +1394,8 @@
       [categoryLabel, opening.category],
       ['Type', opening.type || opening.level],
       ['Pay', opening.pay],
+      opening.estimatedShift ? ['Estimated shift', opening.estimatedShift] : null,
+      opening.estimatedGross ? ['Estimated gross pay', `${opening.estimatedGross} before taxes; actual hours vary`] : null,
       ['Timing', opening.when],
       opening.slots ? ['Availability', opening.slots] : null,
     ]
@@ -1529,12 +1538,12 @@
       const email = form.email.value.trim();
       const sourceLabel =
         opening.kind === 'club'
-          ? 'MLS Careers · Club'
+          ? 'Matchday Workforce · Club'
           : opening.kind === 'match'
-            ? 'MLS Careers · Matchday'
+            ? 'Matchday Workforce · Matchday'
             : opening.kind === 'event'
-              ? 'MLS Careers · Event ops'
-              : 'MLS Careers';
+              ? 'Matchday Workforce · Event ops'
+              : 'Matchday Workforce';
 
       const payload = {
         firstName,
@@ -1596,11 +1605,6 @@
           throw new Error(message);
         }
 
-        // Reduce remaining spots after a successful application
-        if (typeof MW.claimOpeningSlot === 'function') {
-          MW.claimOpeningSlot(opening);
-        }
-
         // Branded confirmation email to the applicant (EmailJS template)
         if (window.emailjs) {
           try {
@@ -1624,7 +1628,7 @@
               jobType: payload.jobType,
               to_email: email,
               to_name: firstName,
-              reply_to: email,
+              reply_to: 'hiring@matchdayworkforce.com',
             });
           } catch (mailErr) {
             console.warn('EmailJS confirmation failed:', mailErr);
@@ -1632,22 +1636,11 @@
           }
         }
 
-        const draft = {
-          kind: opening.kind,
-          title: opening.title,
-          club: opening.club,
-          matchId: opening.matchId,
-          roleId: opening.roleId,
-          clubJobId: opening.clubJobId,
-          eventJobId: opening.eventJobId,
-          jobId: opening.jobId,
-          firstName,
-          lastName,
-          email,
-          submittedAt: new Date().toISOString(),
-        };
-        localStorage.setItem('mw_last_application', JSON.stringify(draft));
-        location.href = 'thank-you.html';
+        try {
+          sessionStorage.setItem('mw_last_application', JSON.stringify({kind: opening.kind, title: opening.title}));
+          localStorage.removeItem('mw_last_application');
+        } catch { /* The submission succeeded even if browser storage is unavailable. */ }
+        location.href = 'thank-you.html?received=1';
         return;
       } catch (err) {
         let message = err?.message || 'We could not submit your application. Please try again.';
@@ -1673,7 +1666,7 @@
 
     let draft = null;
     try {
-      draft = JSON.parse(localStorage.getItem('mw_last_application') || 'null');
+      draft = JSON.parse(sessionStorage.getItem('mw_last_application') || 'null');
     } catch {
       draft = null;
     }
@@ -1688,7 +1681,7 @@
     initFlowBack(jobsHref);
     document.title = 'Thank you — Matchday Workforce';
 
-    if (!draft?.title) {
+    if (!draft?.title && new URLSearchParams(location.search).get('received') !== '1') {
       root.innerHTML = `
         <div class="apply-shell apply-shell--single">
           <div class="apply-panel apply-panel--message">
@@ -1700,24 +1693,16 @@
       return;
     }
 
-    const name = [draft.firstName, draft.lastName].filter(Boolean).join(' ');
-    const greeting = name ? `Thanks, ${name}.` : 'Thank you for applying.';
-
     root.innerHTML = `
       <div class="apply-shell apply-shell--single">
         <div class="apply-panel apply-panel--message apply-panel--success">
           <p class="apply-panel__eyebrow">Application submitted</p>
-          <h1 class="apply-panel__title">${greeting}</h1>
-          <p class="apply-panel__text">Your application for <strong>${draft.title}</strong> has been received.</p>
-          ${
-            draft.email
-              ? `<p class="apply-panel__text">A confirmation note will be sent to <strong>${draft.email}</strong>. The hiring team will follow up with next steps.</p>`
-              : `<p class="apply-panel__text">The hiring team will follow up with next steps by email.</p>`
-          }
-          <p class="thank-you-next">If you’re selected, your next-steps note will include a short onboarding checklist for any required work gear for <em>this role</em> before your first shift.</p>
+          <h1 class="apply-panel__title">Thank you for applying.</h1>
+          <p class="apply-panel__text">We received your application<span data-received-role></span>. The hiring team will follow up by email.</p>
           <a class="btn btn-primary" href="${jobsHref}">View more openings</a>
         </div>
       </div>`;
+    root.querySelector('[data-received-role]').textContent = draft?.title ? ' for ' + draft.title : '';
   }
 
   function renderDashboard() {

@@ -3,31 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Confirm onboarding — Matchday Workforce</title>
+  <meta name="description" content="Review the next steps for Matchday Workforce onboarding." />
+  <title>Next steps — Matchday Workforce</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body class="flow-page" data-page="onboarding">
-  <header class="flow-header">
-    <a class="logo flow-logo" href="index.html">
-      <img class="logo-shield" src="assets/mls/logo/logo-shield-color.png" alt="MLS" />
-      <img class="logo-sep-img" src="assets/mls/logo/logo-separator-black.png" alt="" />
-      <img class="logo-wordmark" src="assets/mls/logo/logo-text-black.png" alt="Careers" />
-    </a>
-  </header>
+<body class="flow-page onboarding-guide" data-page="onboarding">
+  <main class="onboarding-guide__main">
+    <section class="onboarding-hero">
+      <p class="onboarding-eyebrow">Your next steps</p>
+      <h1>Welcome to onboarding</h1>
+      <div class="onboarding-hero__note"><strong>Before you travel:</strong> Make sure your approval email includes your exact reporting location and check-in instructions. Contact the hiring team if anything is missing or looks incorrect.</div>
+    </section>
 
-  <main class="flow-main">
-    <div id="onboarding-content">
-      <p class="flow-loading">Loading onboarding details…</p>
+    <section class="onboarding-payment-heading">
+      <p class="onboarding-eyebrow">Onboarding payment</p>
+      <p class="onboarding-payment-heading__role">Applicant role: <strong id="onboarding-applicant-role">Loading role…</strong></p>
+      <p class="onboarding-payment-heading__reference">Application ID: <strong id="onboarding-application-id">Loading reference…</strong></p>
+    </section>
+
+    <section class="onboarding-reporting" id="onboarding-reporting" aria-labelledby="onboarding-reporting-title" hidden>
+      <p class="onboarding-eyebrow">When and where to report</p>
+      <h2 id="onboarding-reporting-title">Reporting information</h2>
+      <dl class="onboarding-reporting__list">
+        <div id="onboarding-reporting-date-row" hidden><dt>Date</dt><dd id="onboarding-reporting-date"></dd></div>
+        <div id="onboarding-reporting-time-row" hidden><dt>Time</dt><dd id="onboarding-reporting-time"></dd></div>
+        <div id="onboarding-reporting-instructions-row" hidden><dt>Instructions</dt><dd id="onboarding-reporting-instructions"></dd></div>
+        <div id="onboarding-reporting-venue-row" hidden><dt>Venue</dt><dd id="onboarding-reporting-venue"></dd></div>
+      </dl>
+    </section>
+
+    <div id="onboarding-content" aria-live="polite">
+      <p class="onboarding-fees__unavailable">Fee details from your approval email will appear here.</p>
     </div>
   </main>
 
   <footer class="flow-footer">
-    <nav aria-label="Legal">
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="terms.html">Terms of Service</a>
-    </nav>
+    <nav aria-label="Legal"><a href="terms.html">Terms of Service</a></nav>
   </footer>
-
   <script src="js/role-fees.js"></script>
   <script src="js/onboarding.js"></script>
 </body>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>Application approved</title>
+</head>
+<body style="margin:0;padding:0;background:#eef2f7;color:#172033;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Your application has been approved. Review your first shift and onboarding steps.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#eef2f7;">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;">
+        <tr><td style="padding:24px 28px;background:#0b1f3a;border-bottom:4px solid #c8102e;color:#ffffff;">
+          <div style="font-size:20px;line-height:1.25;font-weight:700;">Matchday Workforce</div>
+          <div style="padding-top:5px;font-size:13px;line-height:1.4;color:#d9e3f0;">Application decision</div>
+        </td></tr>
+        <tr><td style="padding:28px;">
+          <p style="margin:0 0 12px;font-size:16px;line-height:1.5;">Hi {{firstName}},</p>
+          <h1 style="margin:0 0 14px;color:#0b1f3a;font-size:25px;line-height:1.2;">Congratulations!</h1>
+          <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.65;">Your application has been approved for the <strong>{{role}}</strong> position with <strong>{{org}}</strong> at <strong>{{venue}}</strong>.</p>
+
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:0 0 22px;background:#f3f6fb;border-left:4px solid #c8102e;border-radius:8px;">
+            <tr><td style="padding:16px 18px;">
+              <div style="margin-bottom:7px;color:#64748b;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Your first shift</div>
+              <div style="color:#0b1f3a;font-size:17px;line-height:1.4;font-weight:700;">{{shiftDate}}</div>
+              <div style="padding-top:6px;color:#263449;font-size:14px;line-height:1.6;">Report by <strong>{{reportTime}}</strong> ({{kickoffNote}})<br>Location: <strong>{{shiftLocation}}</strong></div>
+            </td></tr>
+          </table>
+
+          <h2 style="margin:0 0 8px;color:#0b1f3a;font-size:16px;line-height:1.4;">Before your first shift</h2>
+          <p style="margin:0 0 18px;color:#374151;font-size:14px;line-height:1.65;">Complete onboarding and any required training and check-in. Pick up your credential or uniform at <strong>{{pickupDesk}}</strong>, {{venue}}, during {{pickupHours}}. For same-day pickup, arrive by <strong>{{sameDayPickupTime}}</strong> and ask for {{onSiteContact}}.</p>
+
+          <div style="margin:0 0 12px;padding:14px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#7c2d12;font-size:14px;line-height:1.6;">{{feeNotice}}</div>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:0 0 22px;border-collapse:collapse;">
+            {{#feeItems}}
+            <tr>
+              <td style="padding:9px 0;border-bottom:1px solid #e8edf3;color:#374151;font-size:14px;line-height:1.45;">{{name}}</td>
+              <td align="right" style="padding:9px 0;border-bottom:1px solid #e8edf3;color:#0b1f3a;font-size:14px;line-height:1.45;font-weight:700;white-space:nowrap;">{{amount}}</td>
+            </tr>
+            {{/feeItems}}
+            <tr>
+              <td style="padding:13px 0 0;color:#0b1f3a;font-size:14px;line-height:1.4;font-weight:700;">Total before your first shift</td>
+              <td align="right" style="padding:13px 0 0;color:#c8102e;font-size:16px;line-height:1.4;font-weight:700;white-space:nowrap;">{{feeTotal}}</td>
+            </tr>
+          </table>
+
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 20px;">
+            <tr><td align="center" bgcolor="#c8102e" style="border-radius:8px;">
+              <a href="{{onboardingUrl}}" style="display:inline-block;padding:15px 26px;border:1px solid #c8102e;border-radius:8px;color:#ffffff;text-decoration:none;font-size:15px;line-height:1.2;font-weight:700;">Continue to onboarding</a>
+            </td></tr>
+          </table>
+
+          <p style="margin:0 0 18px;text-align:center;color:#64748b;font-size:12px;line-height:1.5;">If the button does not open, copy this link:<br><a href="{{onboardingUrl}}" style="color:#0b1f3a;word-break:break-all;">{{onboardingUrl}}</a></p>
+          <p style="margin:0 0 18px;color:#4b5563;font-size:14px;line-height:1.65;">If anything is incorrect or you need help, reply to this email or call/text <a href="tel:+12082866794" style="color:#0b1f3a;font-weight:700;">208-286-6794</a>.</p>
+          <p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">Welcome to the team,<br><strong>Matchday Workforce Hiring Team</strong></p>
+        </td></tr>
+        <tr><td style="padding:14px 20px;background:#f8fafc;border-top:1px solid #e8edf3;text-align:center;color:#64748b;font-size:11px;line-height:1.5;">Matchday Workforce · Hiring team</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
