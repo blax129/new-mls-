@@ -417,9 +417,22 @@ ul { list-style: none; }
 }
 
 .mls-hero-txt .h2 {
-  font-size: clamp(1.45rem, 4.2vw, 3.25rem);
-  white-space: nowrap;
+  font-size: clamp(1.55rem, 4.4vw, 3.35rem);
+  white-space: normal;
+  max-width: 16ch;
   word-wrap: normal;
+  line-height: 0.98;
+}
+
+.hero-lead {
+  max-width: 36ch;
+  margin: -0.35rem 0 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(1rem, 2vw, 1.18rem);
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 0;
+  animation: rise 0.8s var(--ease) 0.25s forwards;
 }
 
 @media (max-width: 720px) {
@@ -3155,8 +3168,8 @@ ul { list-style: none; }
 
   .mls-hero-txt .h2,
   .hero h1 {
-    font-size: clamp(1.45rem, 8.5vw, 2rem);
-    max-width: 12ch;
+    font-size: clamp(1.5rem, 8.5vw, 2.05rem);
+    max-width: 14ch;
     letter-spacing: 0.01em;
     margin-bottom: 0.9rem;
   }
