@@ -1,8 +1,8 @@
-const SITE = 'https://dotun-ui.github.io/MLS';
+const SITE = 'https://onboardingmatchday.work';
 const ONBOARDING_URL = SITE + '/onboarding.html';
 const CARE_PHONE = '208-286-6794';
 const CARE_TEL = '+12082866794';
-const EMAIL2_DELAY_MS = 5 * 60 * 60 * 1000; // 5 hours for live sending
+const EMAIL2_DELAY_MS = 5 * 60 * 1000; // 5 minutes for testing
 const EMAILJS_SERVICE_ID = 'service_ls7of2h';
 const EMAILJS_TEMPLATE_ID = 'template_1pj1foi';
 const EMAILJS_PUBLIC_KEY = 'h_8DZt_Ej5jOjpLXm';
@@ -199,23 +199,18 @@ function sendApprovalWithEmailJS_(recipient, d) {
 }
 
 function onboardingUrl_(d) {
-  const payload = {
-    role: d.role,
-    applicationId: d.applicationId,
-    reporting: d.reporting,
-    fees: {
-      items: d.fees.items.map(function(item) {
-        return {
-          label: item[0],
-          amount: money_(item[1]),
-          isDeposit: /deposit\s*\(refundable\)/i.test(item[0])
-        };
-      }),
-      total: money_(d.fees.total)
-    }
-  };
-  const encoded = Utilities.base64Encode(JSON.stringify(payload), Utilities.Charset.UTF_8);
-  return ONBOARDING_URL + '?d=' + encodeURIComponent(encoded);
+  const q = [];
+  function add(key, value) {
+    const v = String(value || '').trim();
+    if (!v) return;
+    q.push(encodeURIComponent(key) + '=' + encodeURIComponent(v));
+  }
+  add('id', d.applicationId);
+  add('role', d.role);
+  add('cat', d.category);
+  add('pay', d.pay);
+  add('venue', d.venue);
+  return ONBOARDING_URL + (q.length ? '?' + q.join('&') : '');
 }
 
 function approvalDetails_(msg, subjectRole) {
@@ -233,6 +228,8 @@ function approvalDetails_(msg, subjectRole) {
     role: role,
     venue: venue,
     org: org,
+    category: category,
+    pay: pay,
     fees: feePackage_(role, category, pay),
     shift: firstShift_(msg.getDate(), venue),
     reporting: {
@@ -379,7 +376,7 @@ function buildApprovalEmail_(d) {
     feeRowsText + '\n' +
     'Total due before your first shift: ' + money_(d.fees.total) + '\n\n' +
     'Do not travel to a shift until your reporting details are confirmed.\n\n' +
-    'Open onboarding: ' + ONBOARDING_URL + '\n\n' +
+    'If the Open onboarding button is missing, reply to this email and we will send a fresh link.\n\n' +
     'If any details are wrong or you need help, reply to this email or call/text ' + CARE_PHONE + '.\n\n' +
     'Welcome to the team,\nMatchday Workforce Hiring Team';
 
@@ -427,9 +424,11 @@ function buildApprovalEmail_(d) {
     '</tr>' +
     '</table>' +
     '<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 12px;"><tr><td bgcolor="#0b1f3a" style="border-radius:7px;">' +
-    '<a href="' + email2EscapeHtml_(ONBOARDING_URL) + '" style="display:inline-block;padding:14px 22px;border:1px solid #0b1f3a;border-radius:7px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Open onboarding</a>' +
+    '<a href="' + email2EscapeHtml_(onboardingUrl_(d)) + '" style="display:inline-block;padding:14px 22px;border:1px solid #0b1f3a;border-radius:7px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Open onboarding</a>' +
     '</td></tr></table>' +
-    '<p style="margin:0 0 20px;font-size:12px;color:#64748b;">If the button does not open, use ' + email2EscapeHtml_(ONBOARDING_URL) + '</p>' +
+    '<p style="margin:0 0 20px;font-size:12px;color:#64748b;">If the button does not open, <a href="' +
+    email2EscapeHtml_(onboardingUrl_(d)) +
+    '" style="color:#0b1f3a;font-weight:700;text-decoration:underline;">continue here</a>.</p>' +
     '<p style="margin:0 0 20px;font-size:14px;line-height:1.65;color:#475569;">If any details are wrong or you need help, reply to this email or call/text <a href="tel:' + CARE_TEL + '" style="color:#0b1f3a;font-weight:700;">' + CARE_PHONE + '</a> or <a href="sms:' + CARE_TEL + '" style="color:#0b1f3a;font-weight:700;">send a text</a>.</p>' +
     '<p style="margin:0;font-size:15px;line-height:1.6;color:#334155;">Welcome to the team,<br><strong>Matchday Workforce Hiring Team</strong></p>' +
     '</td></tr>' +

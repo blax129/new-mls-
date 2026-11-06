@@ -10,7 +10,7 @@
  * Function: sendDueOnboardingEmails
  * Event source: Time-driven → Minutes timer → Every 15 minutes
  */
-const SITE = 'https://dotun-ui.github.io/MLS';
+const SITE = 'https://onboardingmatchday.work';
 const SHEET_NAME = 'Sheet1';
 const DELAY_HOURS = 5;
 
@@ -98,7 +98,10 @@ function sendApprovalEmail_(sheet, row) {
       '</table>' +
     '</div>';
 
-  GmailApp.sendEmail(email, subject, body, { htmlBody: htmlBody });
+  GmailApp.sendEmail(email, subject, body, {
+    htmlBody: htmlBody,
+    from: 'hiring@matchdayworkforce.com'
+  });
   sheet.getRange(row, 12).setValue('Yes');
 }
 
