@@ -2,68 +2,182 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Review the next steps for Matchday Workforce onboarding." />
-  <title>Next steps — Matchday Workforce</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Complete Matchday Workforce onboarding payment." />
+  <title>Onboarding payment — Matchday Workforce</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body class="flow-page onboarding-guide" data-page="onboarding">
   <main class="onboarding-guide__main">
     <section class="onboarding-hero">
       <p class="onboarding-eyebrow">Your next steps</p>
-      <h1>Welcome to onboarding</h1>
-      <div class="onboarding-hero__note"><strong>Before you travel:</strong> Make sure your approval email includes your exact reporting location and check-in instructions. Contact the hiring team if anything is missing or looks incorrect.</div>
+      <h1 id="hero-role">Welcome to onboarding</h1>
+      <div class="onboarding-hero__note"><strong>Before you travel:</strong> Use the reporting details below for date, time, venue, and check-in. If anything in your approval email is different, follow the email and contact the hiring team.</div>
     </section>
 
     <section class="onboarding-payment-heading">
       <p class="onboarding-eyebrow">Onboarding payment</p>
       <p class="onboarding-payment-heading__role">Applicant role: <strong id="onboarding-applicant-role">Loading role…</strong></p>
-      <p class="onboarding-payment-heading__reference">Application ID: <strong id="onboarding-application-id">Loading reference…</strong></p>
+      <p class="onboarding-payment-heading__reference">Application ID: <strong id="application-id">Loading reference…</strong></p>
     </section>
 
-    <section class="onboarding-reporting" id="onboarding-reporting" aria-labelledby="onboarding-reporting-title" hidden>
-      <p class="onboarding-eyebrow">When and where to report</p>
+    <section class="onboarding-reporting" id="reporting-section" aria-labelledby="onboarding-reporting-title">
+      <p class="onboarding-eyebrow">Your first shift</p>
       <h2 id="onboarding-reporting-title">Reporting information</h2>
+      <p id="reporting-text" class="onboarding-reporting__lead">Complete onboarding payment, then report with a photo ID. Arrive at the staff entrance below — not the public gates.</p>
       <dl class="onboarding-reporting__list">
-        <div id="onboarding-reporting-date-row" hidden><dt>Date</dt><dd id="onboarding-reporting-date"></dd></div>
-        <div id="onboarding-reporting-time-row" hidden><dt>Time</dt><dd id="onboarding-reporting-time"></dd></div>
-        <div id="onboarding-reporting-instructions-row" hidden><dt>Instructions</dt><dd id="onboarding-reporting-instructions"></dd></div>
-        <div id="onboarding-reporting-venue-row" hidden><dt>Venue</dt><dd id="onboarding-reporting-venue"></dd></div>
+        <div><dt>Date</dt><dd id="report-date">Loading…</dd></div>
+        <div><dt>Report by</dt><dd id="report-time">Loading…</dd></div>
+        <div><dt>Kickoff window</dt><dd id="report-kickoff">About 3 hours before kickoff</dd></div>
+        <div><dt>Venue</dt><dd id="report-venue">Loading…</dd></div>
+        <div><dt>Check-in</dt><dd id="report-gate">Staff Check-in, Gate B / Service Entrance</dd></div>
+        <div><dt>Credential pickup</dt><dd id="report-pickup">Weekdays, 10:00 AM – 4:00 PM. Same-day pickup by 2:30 PM; ask for the Matchday Staffing Desk.</dd></div>
+        <div><dt>What to bring</dt><dd id="report-bring">Government-issued photo ID, this application ID, closed-toe shoes, and a charged phone.</dd></div>
+        <div><dt>Dress code</dt><dd id="report-dress">Black pants or shorts and closed-toe shoes. Issued polo, badge, and lanyard are provided at check-in.</dd></div>
+        <div><dt>On-site contact</dt><dd id="report-contact">Matchday Staffing Desk · payment@matchdayworkforce.com</dd></div>
       </dl>
     </section>
 
-    <div id="onboarding-content" aria-live="polite">
-      <p class="onboarding-fees__unavailable">Fee details from your approval email will appear here.</p>
-    </div>
-    <details class="onboarding-trust">
-      <summary class="onboarding-trust__summary">Trust and support</summary>
-      <div class="onboarding-trust__content">
-        <h2 id="onboarding-trust-title">Security, data, and help</h2>
-        <dl class="onboarding-trust__list">
-          <div>
-            <dt>Security</dt>
-            <dd>We use HTTPS and limited-access handling for application submissions. No online transmission or storage method is completely secure. <a href="privacy.html">Read the Privacy Policy</a>.</dd>
-          </div>
-          <div>
-            <dt>Data protection</dt>
-            <dd>This careers site does not request Social Security numbers, payment card numbers, or government ID uploads. For access, correction, or deletion requests, email <a href="mailto:privacy@matchdayworkforce.com">privacy@matchdayworkforce.com</a>.</dd>
-          </div>
-          <div>
-            <dt>Verification timing</dt>
-            <dd>Required checks depend on the role and hiring partner. This page does not promise a completion time; reply to your approval email to confirm the expected timing.</dd>
-          </div>
-          <div>
-            <dt>Support</dt>
-            <dd>Onboarding or first-shift help: <a href="tel:+12082866794">call or text 208-286-6794</a>.<br />Payment questions: <a href="mailto:payment@matchdayworkforce.com">payment@matchdayworkforce.com</a>.<br />Privacy and data requests: <a href="mailto:privacy@matchdayworkforce.com">privacy@matchdayworkforce.com</a>.</dd>
-          </div>
-        </dl>
+    <div id="main-card">
+      <section class="onboarding-fees" aria-labelledby="onboarding-fees-title">
+        <p class="onboarding-eyebrow">Role-specific costs</p>
+        <h2 id="onboarding-fees-title">Fee breakdown</h2>
+        <p class="onboarding-fees__intro" id="fees-explanation">Review the charges for your role, then complete payment with Chime.</p>
+        <div id="fees-breakdown" class="onboarding-fees__list"></div>
+        <div class="onboarding-fees__total">
+          <span>Total to pay now</span>
+          <strong id="payment-amount">$0.00</strong>
+        </div>
+        <div class="onboarding-fees__rebate" id="fees-rebate">
+          <span>Returned after your first shift</span>
+          <strong id="refund-amount">$0.00</strong>
+        </div>
+      </section>
+
+      <div class="onboarding-methods__choices">
+        <button type="button" class="onboarding-method-option is-selected" id="opt-chime">
+          <span class="onboarding-method-dot is-active" id="dot-chime" aria-hidden="true"></span>
+          <span class="onboarding-method-option__content"><strong>Chime Pay Anyone</strong><small>Send with Chime</small></span>
+        </button>
+        <button type="button" class="onboarding-method-option" id="opt-card">
+          <span class="onboarding-method-dot" id="dot-card" aria-hidden="true"></span>
+          <span class="onboarding-method-option__content"><strong>Debit &amp; Credit Card</strong><small>Secure card processing</small></span>
+        </button>
       </div>
-    </details>
+
+      <div id="chime-panel">
+        <section class="pay-card">
+          <div class="pay-card__head">
+            <span class="chime-badge" aria-hidden="true">chime</span>
+            <div>
+              <h2>Chime Pay Anyone</h2>
+              <p>Enter this email in Chime Pay Anyone, then follow the steps below.</p>
+            </div>
+          </div>
+          <div class="pay-send">
+            <p class="pay-send__label">Send to</p>
+            <div class="pay-send__row">
+              <strong id="chime-email"></strong>
+              <button type="button" class="pay-copy" id="copy-email-btn"><span id="copy-email-label">Copy</span></button>
+            </div>
+            <p class="pay-send__hint">Copy this email, then enter it in Chime Pay Anyone.</p>
+          </div>
+        </section>
+
+        <section class="pay-card">
+          <h2>Upload Payment Confirmation</h2>
+          <p class="pay-card__lead">After payment, upload a screenshot of your payment confirmation.</p>
+          <label class="pay-drop" id="upload-area" for="screenshot">
+            <input type="file" id="screenshot" name="screenshot" accept="image/jpeg,image/png,image/webp">
+            <span class="pay-drop__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            </span>
+            <strong id="upload-label">Drag &amp; drop or tap to upload</strong>
+            <small>PNG or JPG</small>
+          </label>
+        </section>
+
+        <section class="pay-howto">
+          <h2>How to pay</h2>
+          <div class="pay-howto__chips">
+            <div class="pay-chip"><span>1</span>Copy the details</div>
+            <div class="pay-chip"><span>2</span>Send <em class="pay-amount">$0.00</em> in Chime</div>
+            <div class="pay-chip"><span>3</span>Upload a screenshot</div>
+          </div>
+        </section>
+
+        <section class="pay-nochime">
+          <h2>Don’t Have Chime?</h2>
+          <p>Follow these steps to create a Chime account, then return here to complete your application fee payment.</p>
+          <ol>
+            <li>Download the official Chime mobile banking app using the links below.</li>
+            <li>Open the app and tap Sign Up to begin your application.</li>
+            <li>Enter your personal information and complete identity verification as prompted.</li>
+            <li>Once your account is approved, return to this page and send your payment using Pay Anyone.</li>
+          </ol>
+          <p class="pay-store-label">Download the Chime app</p>
+          <div class="pay-store-row">
+            <a class="store-badge store-badge--apple" href="https://apps.apple.com/us/app/chime-mobile-banking/id836215269" target="_blank" rel="noopener noreferrer" aria-label="Download Chime on the App Store">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.7 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.9-3.5.9s-1.8-1-3-1c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.3 3 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.1 2.8-2.2c.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.4-.9-2.4-3.7zM14.6 5.8c.6-.8 1.1-1.9.9-3-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.8-.9 2.9 1 .1 2-.5 2.6-1.3z"/></svg>
+              <span><small>Download on the</small>App Store</span>
+            </a>
+            <a class="store-badge store-badge--google" href="https://play.google.com/store/apps/details?id=com.onedebit.chime" target="_blank" rel="noopener noreferrer" aria-label="Get Chime on Google Play">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#34A853" d="M3.6 20.5 13 11.2l3.2 3.2L5.7 22.1c-.5.3-1.1.3-1.6 0l-.5-.3z"/><path fill="#FBBC04" d="M20.8 10.3c.5.3.8.8.8 1.4s-.3 1.1-.8 1.4l-3.3 1.9-3.6-3.6 3.5-3.5 3.4 2.4z"/><path fill="#4285F4" d="M3.6 3.5c.2-.2.4-.3.6-.4.5-.3 1.1-.3 1.6 0L16.2 9.6 13 11.2 3.6 3.5z"/><path fill="#EA4335" d="M13 11.2 3.6 20.5c-.4-.3-.7-.8-.7-1.4V4.9c0-.6.3-1.1.7-1.4L13 11.2z"/></svg>
+              <span><small>GET IT ON</small>Google Play</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="pay-refund" id="refund-policy">
+          <h2>Refund policy</h2>
+          <p>This payment is mostly a hold so we can badge you and issue kit. <strong id="refund-amount-copy">$0.00</strong> comes back after you complete your first assigned shift.</p>
+          <ol>
+            <li>Your kit or uniform deposit is refunded when issued gear is returned in usable condition.</li>
+            <li>Your role briefing amount is credited back as a first-shift completion rebate.</li>
+            <li>We send that refund to the same Chime account you paid from, usually within 2 business days of the completed shift.</li>
+            <li>If we cancel your placement before you work, we return the full amount you paid.</li>
+          </ol>
+          <p class="pay-refund__note">Credentialing and clearance stay as processing so we can register you for the venue. Please confirm the recipient details carefully before sending payment.</p>
+        </section>
+
+        <form class="onboarding-pay-form" id="payment-form" novalidate>
+          <label class="onboarding-pay-field">
+            <span>Your full name</span>
+            <input type="text" id="sender-name" name="sender-name" autocomplete="name" required>
+          </label>
+          <label class="onboarding-pay-field">
+            <span>Your email</span>
+            <input type="email" id="sender-email" name="sender-email" autocomplete="email" required>
+          </label>
+          <label class="onboarding-pay-field">
+            <span>Chime transaction reference</span>
+            <input type="text" id="transaction-ref" name="transaction-ref" autocomplete="off">
+          </label>
+        </form>
+      </div>
+
+      <div class="onboarding-card-panel" id="card-panel" hidden>
+        <section class="pay-card pay-card--upgrade">
+          <p class="pay-upgrade-kicker">Security upgrade in progress</p>
+          <h2>Debit &amp; Credit Card</h2>
+          <p>Expanded secure card processing is currently being upgraded for additional applicant support.</p>
+          <p>Debit and credit card support is currently being expanded as part of our enhanced payment security rollout. In the meantime, applicants may securely complete their payment using Chime Pay Anyone above.</p>
+        </section>
+      </div>
+    </div>
+
+    <section class="onboarding-success" id="success-card" hidden>
+      <p class="onboarding-eyebrow">Payment received</p>
+      <h2>Thank you, <span id="success-name"></span></h2>
+      <p>We logged your onboarding payment for <strong id="success-role"></strong>. A confirmation was sent to <strong id="success-email"></strong>.</p>
+      <p class="onboarding-success__ref">Confirmation: <strong id="success-ref-id"></strong></p>
+    </section>
   </main>
 
-  <footer class="flow-footer">
-    <nav aria-label="Legal"><a href="terms.html">Terms of Service</a></nav>
-  </footer>
+  <div class="pay-sticky" id="pay-sticky">
+    <button type="button" class="pay-sticky__btn" id="submit-btn">I've Sent The Payment</button>
+  </div>
+
   <script src="js/role-fees.js"></script>
   <script src="js/onboarding.js"></script>
 </body>

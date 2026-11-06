@@ -17,12 +17,12 @@
     title: 'What this fee is for',
     summary:
       'This onboarding package covers the credential, briefing, and work-gear setup for your role so you’re ready for matchday. Completing payment lets us finish your staff registration and issue the kit assigned to this position.',
-    nonRefundableLabel: 'Non-refundable',
+    nonRefundableLabel: 'Processing',
     nonRefundableRule:
-      'Credentialing, clearance/verification, and training/briefing costs are processing fees used to set up your role.',
-    refundableLabel: 'Refundable deposit',
+      'Credentialing and clearance costs are kept as processing so we can register, badge, and verify you for the venue.',
+    refundableLabel: 'Returned after your first shift',
     refundableRule:
-      'Kit / uniform deposits are returned when you turn in issued gear in usable condition at the end of your assignment (or within the return window in your approval email).',
+      'Your kit / uniform deposit and role-briefing amount are sent back to the same Chime account after you complete your first assigned shift. If we cancel your placement before you work, the full amount is returned.',
   };
 
   /** Target fee ≈ share of one shift, never under $50. */
@@ -79,7 +79,7 @@
           id: 'training',
           label: 'Security & crowd protocols',
           description:
-            'Matchday security briefing, escalation paths, and radio procedures. Non-refundable training fee.',
+            'Matchday security briefing, escalation paths, and radio procedures. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 22,
         },
         {
@@ -125,7 +125,7 @@
           id: 'training',
           label: 'Service & alcohol briefing',
           description:
-            'Stand procedures, cashless POS basics, and responsible service notes. Non-refundable training fee.',
+            'Stand procedures, cashless POS basics, and responsible service notes. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 18,
         },
         {
@@ -164,7 +164,7 @@
           id: 'training',
           label: 'Guest experience induction',
           description:
-            'Wayfinding, accessibility basics, and fan-first service standards. Non-refundable training fee.',
+            'Wayfinding, accessibility basics, and fan-first service standards. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 17,
         },
         {
@@ -203,7 +203,7 @@
           id: 'training',
           label: 'Premium hospitality briefing',
           description:
-            'Suite etiquette, dietary notes, and VIP guest standards. Non-refundable training fee.',
+            'Suite etiquette, dietary notes, and VIP guest standards. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 20,
         },
         {
@@ -249,7 +249,7 @@
           id: 'training',
           label: 'Venue medical protocols',
           description:
-            'Post locations, radio codes, and emergency transfer paths. Non-refundable training fee.',
+            'Post locations, radio codes, and emergency transfer paths. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 16,
         },
         {
@@ -295,7 +295,7 @@
           id: 'training',
           label: 'Safety & ops briefing',
           description:
-            'Load-in routes, radio use, and matchday safety procedures. Non-refundable training fee.',
+            'Load-in routes, radio use, and matchday safety procedures. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 18,
         },
         {
@@ -334,7 +334,7 @@
           id: 'training',
           label: 'Retail & POS induction',
           description:
-            'Product standards, loss prevention basics, and POS flow. Non-refundable training fee.',
+            'Product standards, loss prevention basics, and POS flow. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 17,
         },
         {
@@ -365,7 +365,7 @@
         'Guest Experience',
       ],
       explanation:
-        'Your package covers HR setup, employment verification, and workplace orientation. Office roles do not include a gear deposit — these amounts are non-refundable onboarding processing fees.',
+        'Your package covers HR setup, employment verification, and workplace orientation. Orientation is credited back after you complete your first assigned shift.',
       items: [
         {
           id: 'admin',
@@ -385,7 +385,7 @@
           id: 'training',
           label: 'Workplace orientation',
           description:
-            'Policies, tools, and department orientation session. Non-refundable training fee.',
+            'Policies, tools, and department orientation session. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 18,
         },
       ],
@@ -426,7 +426,7 @@
           id: 'training',
           label: 'Event ops induction',
           description:
-            'Venue familiarisation, reporting lines, and safety briefing. Non-refundable training fee.',
+            'Venue familiarisation, reporting lines, and safety briefing. Returned as a first-shift completion rebate after you work your first assigned shift.',
           weight: 20,
         },
         {
@@ -534,13 +534,16 @@
         amount = roundMoney((targetTotal * (item.weight || 0)) / totalWeight);
         allocated += amount;
       }
+      const isDeposit = Boolean(item.isDeposit);
+      const isCompletionCredit = Boolean(item.isCompletionCredit) || item.id === 'training';
       return {
         id: item.id,
         label: item.label,
         description: item.description,
-        isDeposit: Boolean(item.isDeposit),
+        isDeposit,
+        isCompletionCredit,
         amount,
-        amountLabel: item.isDeposit ? `${formatMoney(amount)} deposit` : formatMoney(amount),
+        amountLabel: isDeposit ? `${formatMoney(amount)} deposit` : formatMoney(amount),
       };
     });
 
@@ -571,9 +574,11 @@
       : targetFeeTotal(shiftPay);
     const items = distributeByWeight(profile.items || [], targetTotal);
 
-    const compulsoryTotal = items.filter((i) => !i.isDeposit).reduce((s, i) => s + i.amount, 0);
     const depositTotal = items.filter((i) => i.isDeposit).reduce((s, i) => s + i.amount, 0);
-    const grandTotal = compulsoryTotal + depositTotal;
+    const completionCreditTotal = items.filter((i) => i.isCompletionCredit).reduce((s, i) => s + i.amount, 0);
+    const refundableTotal = depositTotal + completionCreditTotal;
+    const compulsoryTotal = items.filter((i) => !i.isDeposit && !i.isCompletionCredit).reduce((s, i) => s + i.amount, 0);
+    const grandTotal = compulsoryTotal + refundableTotal;
     const payLabel = input.payLabel || input.pay || `~$${Math.round(hourlyRate)} / hr`;
 
     return {
@@ -589,9 +594,13 @@
       items,
       compulsoryTotal,
       depositTotal,
+      completionCreditTotal,
+      refundableTotal,
       grandTotal,
       compulsoryTotalLabel: formatMoney(compulsoryTotal),
       depositTotalLabel: formatMoney(depositTotal),
+      completionCreditTotalLabel: formatMoney(completionCreditTotal),
+      refundableTotalLabel: formatMoney(refundableTotal),
       grandTotalLabel: formatMoney(grandTotal),
     };
   }

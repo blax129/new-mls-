@@ -210,6 +210,9 @@ function onboardingUrl_(d) {
   add('cat', d.category);
   add('pay', d.pay);
   add('venue', d.venue);
+  add('date', d.shift && d.shift.date);
+  add('time', d.shift && d.shift.reportTime);
+  add('gate', d.shift && d.shift.pickupDesk);
   return ONBOARDING_URL + (q.length ? '?' + q.join('&') : '');
 }
 

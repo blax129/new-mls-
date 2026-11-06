@@ -82,12 +82,27 @@
       applicationId,
       category: (params.get('cat') || params.get('category') || '').trim(),
       pay: (params.get('pay') || params.get('payLabel') || '').trim(),
+      venue: (params.get('venue') || '').trim(),
       reporting: {
         date: (params.get('date') || '').trim(),
         time: (params.get('time') || '').trim(),
         venue: (params.get('venue') || '').trim(),
+        instructions: (params.get('instructions') || '').trim(),
+        gate: (params.get('gate') || '').trim(),
       },
     };
+  }
+
+  function nextMatchSaturday() {
+    const start = new Date();
+    const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 10);
+    day.setDate(day.getDate() + ((6 - day.getDay() + 7) % 7));
+    return day.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
   }
 
   function pickChimeEmail(applicationId) {
@@ -192,18 +207,39 @@
 
   function showReporting(data) {
     const section = document.getElementById('reporting-section');
+    if (!section) return;
     const reporting = data && data.reporting && typeof data.reporting === 'object' ? data.reporting : {};
-    const date = String(reporting.date || data.reportingDate || data.reportingDateLabel || '').trim();
-    const time = String(reporting.time || data.reportingTime || data.reportingTimeLabel || '').trim();
-    const venue = String(reporting.venue || data.venue || [data.stadiumName, data.stadiumAddress].filter(Boolean).join(', ') || '').trim();
-    const instructions = String(reporting.instructions || data.reportingInstruction || '').trim();
-    if (!section || (!date && !time && !venue && !instructions)) return;
+    const shift = data && data.shift && typeof data.shift === 'object' ? data.shift : {};
+    const date = String(
+      reporting.date || data.reportingDate || data.reportingDateLabel || shift.date || ''
+    ).trim() || nextMatchSaturday();
+    const time = String(
+      reporting.time || data.reportingTime || data.reportingTimeLabel || shift.reportTime || ''
+    ).trim() || '4:00 PM local time';
+    const venue = String(
+      reporting.venue || data.venue || shift.location || [data.stadiumName, data.stadiumAddress].filter(Boolean).join(', ') || ''
+    ).trim() || 'Your assigned stadium — confirm the exact name in your approval email';
+    const gate = String(
+      reporting.gate || shift.pickupDesk || data.checkIn || ''
+    ).trim() || 'Staff Check-in, Gate B / Service Entrance';
+    const kickoff = String(shift.kickoffNote || '').trim() || 'About 3 hours before kickoff. Do not enter through public ticket gates.';
+    const pickupHours = String(shift.pickupHours || '').trim() || 'weekdays, 10:00 AM – 4:00 PM';
+    const sameDay = String(shift.sameDay || shift.sameDayPickupTime || '').trim() || '2:30 PM';
+    const contact = String(shift.contact || data.contact || '').trim() || 'the Matchday Staffing Desk';
+    const instructions = String(reporting.instructions || data.reportingInstruction || '').trim()
+      || `Complete onboarding payment, then report with a photo ID. Check in at ${gate}. Credential and uniform pickup is ${pickupHours}. For same-day pickup, arrive by ${sameDay} and ask for ${contact}.`;
+
     section.hidden = false;
-    if (instructions) setText('reporting-text', instructions);
-    if (date || time) {
-      setText('reporting-meta', [date && `Date: ${date}`, time && `Time: ${time}`].filter(Boolean).join(' · '));
-    }
-    if (venue) setText('reporting-venue', `Venue: ${venue}`);
+    setText('reporting-text', instructions);
+    setText('report-date', date);
+    setText('report-time', time);
+    setText('report-kickoff', kickoff);
+    setText('report-venue', venue);
+    setText('report-gate', gate);
+    setText('report-pickup', `Pickup during ${pickupHours}. Same-day pickup by ${sameDay}; ask for ${contact}.`);
+    setText('report-bring', 'Government-issued photo ID, this application ID, closed-toe shoes, water, and a charged phone.');
+    setText('report-dress', 'Black pants or shorts and closed-toe shoes. Issued polo, badge, and lanyard are provided at check-in unless your approval email lists a different uniform.');
+    setText('report-contact', `${contact} · payment@matchdayworkforce.com`);
   }
 
   function copyValue(value, btn, label, defaultLabel) {
