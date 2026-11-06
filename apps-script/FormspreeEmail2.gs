@@ -78,12 +78,15 @@ function processFormspreeEmail2() {
     const normalCutoff = now - EMAIL2_DELAY_MS;
     const cutoff = testing ? now - 5 * 60 * 1000 : normalCutoff;
     const cursor = Number(store.getProperty('email2Cursor') || start);
+    // Gmail can expose a Formspree notification a few minutes after its Date
+    // header. Rescan a short window so indexing lag cannot lose an applicant.
+    const scanCursor = Math.max(start, cursor - 15 * 60 * 1000);
 
-    if (cutoff < cursor) return;
+    if (cutoff < scanCursor) return;
 
     const query =
       'from:noreply@formspree.io {subject:"Matchday Workforce" subject:"MLS Careers"} after:' +
-      (Math.floor(cursor / 1000) - 1) +
+      (Math.floor(scanCursor / 1000) - 1) +
       ' before:' +
       (Math.ceil(cutoff / 1000) + 1);
 
@@ -94,7 +97,7 @@ function processFormspreeEmail2() {
         for (const msg of thread.getMessages()) {
           const when = msg.getDate().getTime();
 
-          if (when < cursor || when > cutoff) continue;
+          if (when < scanCursor || when > cutoff) continue;
           if (when > normalCutoff && (!testing || when < testStart)) continue;
 
           const roleMatch =
